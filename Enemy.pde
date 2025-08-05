@@ -4,7 +4,7 @@ static ArrayList<Enemy> deadEnemies = new ArrayList<>();
 class Enemy {
     PVector pos = new PVector();
     PVector target = new PVector();
-    float health = 5;
+    float health = 1;
 
     boolean aerial = false;
 
@@ -28,7 +28,6 @@ class Enemy {
         PVector dir = PVector.sub(target, pos);
         dir.setMag(speed);
         pos.add(dir);
-
     }
 
     Enemy(PVector pos) {
@@ -45,11 +44,11 @@ class Enemy {
     }
 }
 
-Enemy createEnemy(PVector pos) {
-    Enemy newEnemy = new Enemy(new PVector(mouseX, mouseY));
+Enemy createEnemy(PVector pos, boolean aerial) {
+    Enemy newEnemy = new Enemy(new PVector(mouseX, mouseY), aerial);
 }
 
 
-Enemy createEnemyAtMouse() {
-    return createEnemy(new PVector(mouseX, mouseY));
+Enemy createEnemyAtMouse(boolean aerial) {
+    return createEnemy(new PVector(mouseX, mouseY), aerial);
 }
