@@ -43,3 +43,12 @@ class Enemy {
         enemies.add(this);
     }
 }
+
+Enemy createEnemy(PVector pos) {
+    Enemy newEnemy = new Enemy(new PVector(mouseX, mouseY));
+}
+
+
+Enemy createEnemyAtMouse() {
+    return createEnemy(new PVector(mouseX, mouseY));
+}

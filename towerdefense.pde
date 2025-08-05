@@ -1,52 +1,51 @@
-float health = 500;
+float health = starterHealth;
+int money = starterMoney;
+
 float deltaTime = 0;
 float lastMillis = 0;
 
-int gridSize = 32;
-
-int money = 1000;
+// usa esse objeto pra lidar com a tela. O processing
+// me obriga a criar um objeto pra poder usar as funções de
+// desenhar na tela :) (ou passar sempre um objeto PApplet)
+__class__UI UI = new __class__UI();
 
 void setup() {
-    colorMode(HSB, 360, 100, 100);
     lastMillis = millis();
+    colorMode(HSB, 360, 100, 100);
 }
 
 void settings() {
-    size(gridSize * 32, gridSize * 18);
+    size(gridSize * length, gridSize * height);
 }
 
-void draw() {
-    background(0, 0, 0);
-
+// Calcula o DeltaTime
+void calculateDt() {
     float millis = millis();
     deltaTime = (millis - lastMillis) / 1000;
     lastMillis = millis;
+}
 
-    fill(0, 0, 100);
-    text("health: " + health + "\nmoney: " + money, 10, 10);
+/**
+ * Atualiza o jogo e processa um novo frame
+ */
+void gameTick() {
+    // Calcula o DeltaTime
+    calculateDt();
 
-    for(Structure s : structures) {
-        s.update();
-    }
-
-    for(Enemy e : enemies) {
-        e.update();
-    }
-
+    // Atualiza o jogo
     for(Enemy e : deadEnemies) {
         enemies.remove(e);
     }
     deadEnemies = new ArrayList<>();
 }
 
-void mouseReleased() {
-    build();
-}
+void draw() {
 
-void keyPressed() {
-    if(key == 'e') {
-        new Enemy(new PVector(mouseX, mouseY));
-    }
+    // Atualiza o jogo
+    gameTick();
+
+    // Desenha as coisas na tela
+    UI.draw();
 }
 
 void build() {
