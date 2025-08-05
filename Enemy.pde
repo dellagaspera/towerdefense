@@ -4,7 +4,7 @@ static ArrayList<Enemy> deadEnemies = new ArrayList<>();
 class Enemy {
     PVector pos = new PVector();
     PVector target = new PVector();
-    float health = 5;
+    float health = 1;
 
     boolean aerial = false;
 

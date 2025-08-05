@@ -1,5 +1,3 @@
-static ArrayList<Tower> towers = new ArrayList<>();
-
 class Tower extends Structure {
     float range = gridSize * 4;
 
@@ -25,11 +23,9 @@ class Tower extends Structure {
             }
         }
 
-        shootCooldown += deltaTime;
-
         if(shootCooldown >= shootDelay) {
             canShoot = true;
-        }
+        } else shootCooldown += deltaTime;
     }
 
     void render() {        
@@ -48,11 +44,14 @@ class Tower extends Structure {
         }
     }
 
-    Tower(int x, int y, boolean ground, boolean aerial) {
+    Tower(int x, int y, boolean ground, boolean aerial, float shootDelay, float damage) {
         super(x, y);
 
         this.ground = ground;
         this.aerial = aerial;
+
+        this.shootDelay = shootDelay;
+        this.damage = damage;
     }
 
     boolean isInRange(PVector target) {

@@ -2,6 +2,7 @@ static ArrayList<Structure> structures = new ArrayList<>();
 
 class Structure {
     PVector pos = new PVector();
+    int movementCost = 9999;
 
     void update() {
         render();
@@ -13,7 +14,7 @@ class Structure {
     }
 
     Structure(int x, int y) {
-        this.pos = new PVector(x * gridSize + gridSize / 2, y * gridSize + gridSize / 2);
+        this.pos = new PVector(x * gridSize, y * gridSize);
         structures.add(this);
     }
 }
