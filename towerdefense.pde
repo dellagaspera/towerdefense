@@ -11,11 +11,16 @@ UserInterface UI = new UserInterface();
 
 int grid[][];
 
-
+/**
+ * Configura o jogo
+ */
 void settings() {
     UI.settingsUI();
 }
 
+/**
+ * Inicializa o jogo
+ */
 void setup() {
     UI.setupUI();
 
@@ -23,12 +28,18 @@ void setup() {
     grid = new int[gridX][gridY];
 }
 
+/**
+ * Calcula o deltaTime
+ */
 void calculateDt() {
     float millis = millis();
     deltaTime = (millis - lastMillis) / 1000;
     lastMillis = millis;
 }
 
+/**
+ * Atualiza o jogo a cada frame
+ */
 void gameTick() {
     for(Structure s : structures) {
         s.update();
@@ -48,17 +59,6 @@ void draw() {
     gameTick();
 
     UI.draw();
-}
-
-void build() {
-    int x = mouseX / gridSize;
-    int y = mouseY / gridSize;
-
-    if(x < 0 || x >= gridX - 1 || y < 0 || y >= gridY - 1) return;
-
-    money -= 100;
-
-    new Cannon(x, y);
 }
 
 void updateGrid() {

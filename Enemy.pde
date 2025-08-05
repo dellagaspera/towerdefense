@@ -11,7 +11,7 @@ class Enemy {
     float speed = 2;
 
     void update() {
-        render();
+        // render();
 
         target = new PVector(mouseX, mouseY);
         move();
