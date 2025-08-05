@@ -1,5 +1,26 @@
 // NÃO use essa classe, use o objeto "UI"
-class __class__UI {
+class UserInterface {
+
+    PImage cannon1 = null;
+    PImage cannon2 = null;
+
+    public void setupUI() {
+        colorMode(HSB, 360, 100, 100);
+
+        noStroke();
+
+        loadSprites();
+    }
+
+    public void settingsUI() {
+        size(gridSize*gridX, gridSize*gridY);
+        noSmooth();
+    }
+
+    private void loadSprites() {
+        cannon1 = loadImage("sprites/cannon1.png");
+        cannon2 = loadImage("sprites/cannon2.png");
+    }
 
     /**
      * Desenha as coisa na tela

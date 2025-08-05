@@ -46,6 +46,7 @@ class Enemy {
 
 Enemy createEnemy(PVector pos, boolean aerial) {
     Enemy newEnemy = new Enemy(new PVector(mouseX, mouseY), aerial);
+    return newEnemy;
 }
 
 

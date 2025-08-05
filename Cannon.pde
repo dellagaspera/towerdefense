@@ -3,9 +3,9 @@ class Cannon extends Tower {
 
     void render() {       
         if(canShoot) 
-            image(cannon2, pos.x, pos.y);
+            image(UI.cannon2, pos.x, pos.y);
         else
-            image(cannon1, pos.x, pos.y);
+            image(UI.cannon1, pos.x, pos.y);
     }
 
     void shoot(Enemy e) {
