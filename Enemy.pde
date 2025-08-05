@@ -28,6 +28,7 @@ class Enemy {
         PVector dir = PVector.sub(target, pos);
         dir.setMag(speed);
         pos.add(dir);
+
     }
 
     Enemy(PVector pos) {
