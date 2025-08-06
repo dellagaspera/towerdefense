@@ -52,13 +52,14 @@ void gameTick() {
     }
     deadEnemies = new ArrayList<>();
 }
-
+TextButton a = new TextButton(new PVector(200, 200), new PVector(200, 200), "OI");
 void draw() {
     calculateDt();
 
     gameTick();
 
     UI.draw();
+    a.render();
 }
 
 void updateGrid() {

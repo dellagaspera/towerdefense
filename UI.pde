@@ -37,6 +37,7 @@ class UserInterface {
      */
     private void loadFonts() {
         DEFAULT_FONT = createFont(DEFAULT_FONT_NAME, DEFAULT_FONT_SIZE);
+        println("criado");
     }
 
     /**
@@ -99,7 +100,9 @@ private class Button {
 
     // Forma da Hitbox
     ButtonShapes shape = ButtonShapes.RECTANGLE;
-    // Tamanho da área de clique do botão
+    // Tamanho da área de clique do botão. Para o retângulo,
+    // é a largura e a altura. Para o círculo, o primeiro valor
+    // será usado para representar o raio.
     PVector hitboxSize = new PVector(30, 30);
     // Posição do vértice superior esquerdo do botão.
     PVector pos;
@@ -132,6 +135,9 @@ private class Button {
     public Runnable onMouseLeave;
 
     Button(PVector pos, PVector size) {
+        if (buttons == null) {
+            buttons = new ArrayList<>();
+        }
         this.pos = pos;
         this.hitboxSize = size;
 
@@ -313,7 +319,21 @@ public class TextButton extends Button {
     @Override
     public void render() {
         // Desenha o fundo
-
+        fill(backgroundColor);
+        switch (shape) {
+            case RECTANGLE:
+                rect(pos.x, pos.y, hitboxSize.x, hitboxSize.y);
+                break;
+            case CIRCLE:
+                // aqui, considera que hitboxSize.x == hitboxSize.y
+                circle(pos.x, pos.y, hitboxSize.x);
+                break;
+        }
         // Desenha o texto
+        fill(textColor);
+        textFont(textFont);
+        textAlign(textAlign, textAlign);
+        text(text, pos.x, pos.y, hitboxSize.x, hitboxSize.y);
     }
 }
+
