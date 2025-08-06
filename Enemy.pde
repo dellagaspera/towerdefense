@@ -4,6 +4,7 @@ static ArrayList<Enemy> deadEnemies = new ArrayList<>();
 class Enemy {
     PVector pos = new PVector();
     PVector target = new PVector();
+    float maxHealth = 1;
     float health = 1;
 
     boolean aerial = false;
@@ -32,6 +33,7 @@ class Enemy {
 
     Enemy(PVector pos) {
         this.pos = pos;
+        health = maxHealth;
 
         enemies.add(this);
     }
@@ -39,6 +41,7 @@ class Enemy {
     Enemy(PVector pos, boolean aerial) {
         this.pos = pos;
         this.aerial = aerial;
+        health = maxHealth;
 
         enemies.add(this);
     }
