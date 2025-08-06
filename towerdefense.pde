@@ -11,6 +11,9 @@ UserInterface UI = new UserInterface();
 
 int grid[][];
 
+Frame a;
+Text b;
+
 /**
  * Configura o jogo
  */
@@ -23,6 +26,9 @@ void settings() {
  */
 void setup() {
     UI.setupUI();
+
+    a = new Frame(UI.cannon2);
+    b = new Text(new PVector((gridSize*gridX)/2-100, 50), new PVector(200, 50), "Teste", a);
 
     lastMillis = millis();
     grid = new int[gridX][gridY];
@@ -52,14 +58,22 @@ void gameTick() {
     }
     deadEnemies = new ArrayList<>();
 }
-TextButton a = new TextButton(new PVector(200, 200), new PVector(200, 200), "OI");
+
+int v = 0;
 void draw() {
     calculateDt();
-
     gameTick();
 
     UI.draw();
-    a.render();
+    // a.render();
+    v = (v+1)%255;
+    a.hasStroke = true;
+    a.strokeColor = color(255-v, 100, 50);
+    a.strokeWeight = 16;
+    b.horizontalTextAlign = CENTER;
+    b.verticalTextAlign   = CENTER;
+    b.textColor = color(v, 100, 50);
+    b.render();
 }
 
 void updateGrid() {

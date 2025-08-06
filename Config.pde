@@ -11,7 +11,7 @@ static final int initialHealth = 1;
 static final int gridX = 32;
 static final int gridY = 18;
 
-// Botão de Texto
-final String DEFAULT_FONT_NAME = "fonts/arial.ttf";
-final int DEFAULT_FONT_SIZE = 64;
-PFont DEFAULT_FONT; // setado no setup
+// Texto
+static final String DEFAULT_FONT_NAME = "fonts/arial.ttf";
+static final int DEFAULT_FONT_SIZE = 16;
+PFont DEFAULT_TEXT_FONT;

@@ -21,7 +21,11 @@ class UserInterface {
      */
     public void settingsUI() {
         size(gridSize*gridX, gridSize*gridY);
-        noSmooth();
+       // noSmooth();
+    }
+
+    private void loadFonts() {
+        DEFAULT_TEXT_FONT = createFont(DEFAULT_FONT_NAME, DEFAULT_FONT_SIZE);
     }
 
     /**
@@ -30,14 +34,6 @@ class UserInterface {
     private void loadSprites() {
         cannon1 = loadImage("sprites/cannon1.png");
         cannon2 = loadImage("sprites/cannon2.png");
-    }
-
-    /**
-     * Carrega as fontes
-     */
-    private void loadFonts() {
-        DEFAULT_FONT = createFont(DEFAULT_FONT_NAME, DEFAULT_FONT_SIZE);
-        println("criado");
     }
 
     /**
@@ -79,15 +75,231 @@ class UserInterface {
 
 }
 
-ArrayList<Button> buttons = new ArrayList<>();
 
 /**
- * Enum responsável pelos tipos de formas da hitbox
- * ou do frame(fundo) dos botões.
+ * Classe base para objetos da interface.
+ *
+ * active: se o objeto está ativo (ou seja, vai ser renderizado
+ *         e atualizado).
+ * pos: a posição do objeto na tela.
+ *  -> Para retângulos: a posição do vértice superior esquerdo
+ *  -> Para círculos: a posição do centro
+ * size: tamanho da forma
+ *  -> Para retângulos: (largura, altura)
+ *  -> Para círculos: (raio, "tanto faz o que estiver aqui")
+ * hitBoxSize: a largura e a altura da hitbox do objeto
+ * hasStroke: se tem borda
+ * strokeColor: a cor da borda (se tiver)
+ * strokeWeight: a largura da borda (se tiver)
+ *
+ * Para desenhar um objeto na tela, chame render().
+ * No entanto, para customizar a forma que ele é desenhado,
+ * customize drawObject().
  */
-public enum ButtonShapes {
+private abstract class UIObject {
+
+    // Constantes de padrão
+    private final Boolean DEFAULT_hasStroke = false;
+    private final PVector DEFAULT_size = new PVector(30, 30);
+    private final color DEFAULT_strokeColor = color(0, 0, 0);
+    private final color DEFAULT_strokeWeight = 16;
+
+    boolean active = true;
+    PVector pos;
+    PVector size = DEFAULT_size;
+    PVector hitBoxSize;
+    Boolean hasStroke = DEFAULT_hasStroke;
+    color strokeColor = DEFAULT_strokeColor;
+    float strokeWeight = DEFAULT_strokeWeight;
+
+    UIObject (PVector pos, PVector size) {
+        this.pos = pos;
+        this.size = size;
+        this.hitBoxSize = size;
+    }
+
+    // NÃO use esse método. Ele literalmente só desenha o
+    // objeto na tela, sem se importar com a cor, a borda,
+    // etc. O processing não me deixou colocar privado e
+    // abstrato. E, sem abstrato, a função render() não
+    // atualizava a chamada da função.
+    public abstract void drawObject();
+
+    // Método que prepara para desenhar o objeto na tela
+    // e desenha ele na tela
+    public void render() {
+        if (!active) return;
+        if (hasStroke) {
+            stroke(strokeColor);
+            strokeWeight(strokeWeight);
+        } else {
+            noStroke();
+        }
+        drawObject();
+    };
+
+}
+
+/**
+ * Enum responsável pelos tipos de formas.
+ */
+public enum Shape {
     RECTANGLE, CIRCLE
 }
+
+
+/**
+ * Classe que representa uma forma geométrica (definidas
+ * pelo enum Shapes)
+ *
+ * backgroundColor: cor da forma
+ * shape: tipo de forma
+ */
+public class Frame extends UIObject {
+
+    // Constantes de padrão
+    private final color DEFAULT_background_color = color(255, 255, 255);
+    private final Shape DEFAULT_shape = Shape.RECTANGLE;
+
+    color backgroundColor = DEFAULT_background_color;
+    Shape shape = DEFAULT_shape;
+    PImage sprite = null;
+
+    // apenas uma forma
+    public Frame(PVector pos, PVector size, color backgroundColor, Shape shape) {
+        super(pos, size);
+        this.size = size;
+        this.backgroundColor = backgroundColor;
+        this.shape = shape;
+    }
+
+    // uma imagem
+    public Frame(PVector pos, PVector size, PImage sprite) {
+        super(pos, size);
+        this.size = size;
+        this.sprite = sprite;
+    }
+
+    // uma imagem que, se não for desenhada, aparecerá
+    // uma forma com cor definida
+    public Frame(PVector pos, PVector size, PImage sprite, color backgroundColor) {
+        super(pos, size);
+        this.size = size;
+        this.sprite = sprite;
+        this.backgroundColor = backgroundColor;
+    }
+
+    // forma usada quando a posição e o tamanho do frame estão
+    // em função de outra coisa
+    public Frame(color backgroundColor, Shape shape) {
+        super(new PVector(0, 0), new PVector(0, 0));
+        this.size = new PVector(0, 0);
+        this.backgroundColor = backgroundColor;
+        this.shape = shape;
+    }
+
+    // imagem usada quando a posição e o tamanho do frame estão
+    // em função de outra coisa
+    public Frame(PImage sprite) {
+        super(new PVector(0, 0), new PVector(0, 0));
+        this.size = new PVector(0, 0);
+        this.sprite = sprite;
+    }
+    public Frame(PImage sprite, color backgroundColor) {
+        super(new PVector(0, 0), new PVector(0, 0));
+        this.size = new PVector(0, 0);
+        this.sprite = sprite;
+        this.backgroundColor = backgroundColor;
+    }
+
+
+    // Desenha o frame na tela
+    public void drawObject() {
+        fill(backgroundColor);
+        switch (shape) {
+            case RECTANGLE:
+                rect(pos.x, pos.y, size.x, size.y);
+                break;
+            case CIRCLE:
+                circle(pos.x, pos.y, size.x);
+                break;
+            default:
+                throw new IllegalArgumentException("Class Frame does not support shape " + shape);
+        }
+
+        // desenha a imagem se houver
+        if (sprite != null) image(sprite, pos.x, pos.y, size.x, size.y);
+    }
+
+}
+
+/**
+ * Classe que representa um texto.
+ *
+ * text: o texto
+ * textColor: a cor do texto
+ * textSize: o tamanho do texto
+ * textAlign: o alinhamento do texto
+ * textFont: a fonte do texto
+ *
+ * backgroundFrame: o frame que fica de fundo (se for null, não aparece nada)
+ *
+ */
+public class Text extends UIObject {
+
+    // Constantes de padrão
+    private final color DEFAULT_text_color = color(0, 0, 0);
+    private final int DEFAULT_horizontal_text_align = CENTER;
+    private final int DEFAULT_vertical_text_align = CENTER;
+
+    String text;
+    color textColor = DEFAULT_text_color;
+    int textSize = DEFAULT_FONT_SIZE;
+    int horizontalTextAlign = DEFAULT_horizontal_text_align; // (LEFT, CENTER OU RIGHT)
+    int verticalTextAlign = DEFAULT_vertical_text_align; // (TOP, CENTER OU BOTTOM)
+    PFont textFont = DEFAULT_TEXT_FONT;
+
+    Frame backgroundFrame = null;
+
+    // sem frame
+    public Text(PVector pos, PVector size, String text) {
+        super(pos, size);
+        this.text = text;
+    }
+
+    // com frame
+    public Text(PVector pos, PVector size, String text, Frame backgroundFrame) {
+        super(pos, size);
+        this.text = text;
+        this.backgroundFrame = backgroundFrame;
+    }
+
+    public void drawObject() {
+        if (backgroundFrame != null) {
+            backgroundFrame.pos = pos;
+            backgroundFrame.size = size;
+            backgroundFrame.render();
+        }
+        fill(textColor);
+        textSize(textSize);
+        if (textFont != null) {
+            textFont(textFont);
+        } else {
+            println("a fonte do texto \"" + text + "\" nao foi carregada");
+        }
+
+        textAlign(horizontalTextAlign, verticalTextAlign);
+        text(text, pos.x, pos.y, size.x, size.y);
+    }
+
+}
+
+
+
+
+
+ArrayList<Button> buttons = new ArrayList<>();
+
 
 /**
  * Classe responsável pelos botões do jogo.
@@ -99,7 +311,7 @@ private class Button {
     // Atributos //
 
     // Forma da Hitbox
-    ButtonShapes shape = ButtonShapes.RECTANGLE;
+    Shape shape = Shape.RECTANGLE;
     // Tamanho da área de clique do botão. Para o retângulo,
     // é a largura e a altura. Para o círculo, o primeiro valor
     // será usado para representar o raio.
@@ -247,93 +459,3 @@ private class Button {
     }
 
 }
-
-/**
- * Botão com um texto customizável.
- */
-public class TextButton extends Button {
-    private final color DEFAULT_TEXT_COLOR = color(0, 0, 0);
-    private final color DEFAULT_BACKGROUND_COLOR = color(255, 255, 255);
-    private final int DEFAULT_TEXT_ALIGN = CENTER;
-    // Atributos //
-        // Texto
-    // O texto do botão
-    String text;
-    // A cor do texto
-    color textColor = DEFAULT_TEXT_COLOR;
-    // O tamanho do texto
-    int textSize = DEFAULT_FONT_SIZE;
-    // O alinhamento do texto
-    int textAlign = DEFAULT_TEXT_ALIGN; // (LEFT, CENTER OU RIGHT)
-    // A fonte do texto
-    PFont textFont = DEFAULT_FONT;
-        // Fundo
-    // A forma do fundo. Use Button.Shape para definir a forma
-    // A cor do background
-    color backgroundColor = DEFAULT_BACKGROUND_COLOR;
-
-    TextButton(PVector pos, PVector size, String text) {
-        super(pos, size);
-        this.text = text;
-    }
-    TextButton(PVector pos, PVector size, String text, color textColor) {
-        super(pos, size);
-        this.text = text;
-        this.textColor = textColor;
-    }
-
-    // Propriedades //
-
-    // Alterar o texto
-    public void setText(String text) {
-        this.text = text;
-    }
-    // Alterar a cor do texto
-    public void setTextColor(color cor) {
-        this.textColor = cor;
-    }
-    // Alterar a fonte
-    public void setTextFont(PFont textFont) {
-        this.textFont = textFont;
-    }
-    // Alterar o tamanho do texto
-    public void setTextSize(int textSize) {
-        this.textSize = textSize;
-    }
-    // Alterar o alinhamento do texto
-    public void setTextAlign(int textAlign) {
-        this.textAlign = textAlign;
-    }
-    // Alterar a cor do fundo
-    public void setBackgroundColor(color cor) {
-        this.backgroundColor = cor;
-    }
-
-
-
-    // Eventos //
-
-    /**
-     * Desenha o botão na tela.
-     */
-    @Override
-    public void render() {
-        // Desenha o fundo
-        fill(backgroundColor);
-        switch (shape) {
-            case RECTANGLE:
-                rect(pos.x, pos.y, hitboxSize.x, hitboxSize.y);
-                break;
-            case CIRCLE:
-                // aqui, considera que hitboxSize.x == hitboxSize.y
-                circle(pos.x, pos.y, hitboxSize.x);
-                break;
-        }
-        // Desenha o texto
-        fill(textColor);
-        textFont(textFont);
-        textAlign(textAlign, textAlign);
-        text(text, pos.x, pos.y, hitboxSize.x, hitboxSize.y);
-    }
-}
-
