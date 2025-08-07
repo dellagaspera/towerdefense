@@ -1,3 +1,5 @@
+ArrayList<UIObject> UIObjects = new ArrayList<UIObject>();
+
 // NÃO use essa classe, use o objeto "UI"
 class UserInterface {
 
@@ -41,8 +43,11 @@ class UserInterface {
      */
     public void draw() {
         background(0, 0, 0);
+        updateUIObjects();
+        //updateButtons(false, false);
         drawStats();
         drawGame();
+        drawButtons();
     }
 
     /**
@@ -69,7 +74,25 @@ class UserInterface {
      * Desenha os botões do jogo
      */
     public void drawButtons() {
+        for (Button b : buttons) {
+            b.render();
+        }
+    }
 
+    private void updateUIObjects() {
+        for (UIObject uo : UIObjects) {
+            uo.update();
+        }
+    }
+
+    /**
+     * Atualiza o estado dos botões
+     */
+    public void updateButtons(boolean mouseDown, boolean mouseUp) {
+        for (Button b : buttons) {
+            b.update();
+            b.handleMouseInteraction(mouseDown, mouseUp);
+        }
     }
 
 
@@ -78,6 +101,10 @@ class UserInterface {
 
 /**
  * Classe base para objetos da interface.
+ *
+ * AVISO: Para desenhar um objeto na tela, chame render().
+ * No entanto, para customizar a forma que ele é desenhado
+ * (ou atualizado a cada frame), customize drawObject().
  *
  * active: se o objeto está ativo (ou seja, vai ser renderizado
  *         e atualizado).
@@ -92,10 +119,14 @@ class UserInterface {
  * strokeColor: a cor da borda (se tiver)
  * strokeWeight: a largura da borda (se tiver)
  *
- * Para desenhar um objeto na tela, chame render().
- * No entanto, para customizar a forma que ele é desenhado,
- * customize drawObject().
+ * Eventos:
+ *  * onMouseEnter: função que será executada quando o mouse entrar na
+ *  *               area do botão (quando mouseTouching ir de false para true)
+ *  * onMouseLeave: função que será executada quando o mouse sair da
+ *  *               area do botão (quando mouseTouching ir de true para false)
+ *
  */
+
 private abstract class UIObject {
 
     // Constantes de padrão
@@ -105,6 +136,7 @@ private abstract class UIObject {
     private final color DEFAULT_strokeWeight = 16;
 
     boolean active = true;
+    boolean mouseTouching = false;
     PVector pos;
     PVector size = DEFAULT_size;
     PVector hitBoxSize;
@@ -112,10 +144,16 @@ private abstract class UIObject {
     color strokeColor = DEFAULT_strokeColor;
     float strokeWeight = DEFAULT_strokeWeight;
 
+    // Funções de Evento //
+
+    public Runnable onMouseEnter;
+    public Runnable onMouseLeave;
+
     UIObject (PVector pos, PVector size) {
         this.pos = pos;
         this.size = size;
         this.hitBoxSize = size;
+        UIObjects.add(this);
     }
 
     // NÃO use esse método. Ele literalmente só desenha o
@@ -125,10 +163,41 @@ private abstract class UIObject {
     // atualizava a chamada da função.
     public abstract void drawObject();
 
+    /**
+     * Método chamado quando o mouse entra na área do botão (não
+     * necessariamente é clicado, o mouse só toca o botão).
+     * Use a função onMouseEnter para customizá-lo.
+     */
+    private final void handleMouseEnter() {
+        //mouseTouching = true;
+        if (onMouseEnter != null) onMouseEnter.run();
+    }
+
+    /**
+     * Método chamado quando o mouse sai da área do botão (o
+     * mouse parou de clicar).
+     * Use a função onMouseLeave para customizá-lo.
+     */
+    private void handleMouseLeave() {
+        //mouseTouching = false;
+        if (onMouseLeave != null) onMouseLeave.run();
+    }
+
+    public void update() {
+        // Verifica se o mouse está fora da tela
+        if ( (mouseX <= 0 || mouseX > width-1) || (mouseY <= 0 || mouseY > height-1) ) {
+            mouseTouching = false;
+            handleMouseLeave();
+        } else { // se o mouse está dentro da tela
+            checkMouseTouching();
+        }
+    }
+
     // Método que prepara para desenhar o objeto na tela
     // e desenha ele na tela
     public void render() {
         if (!active) return;
+
         if (hasStroke) {
             stroke(strokeColor);
             strokeWeight(strokeWeight);
@@ -137,6 +206,29 @@ private abstract class UIObject {
         }
         drawObject();
     };
+
+    /**
+     * Método que verifica se o mouse está tocando o botão.
+     */
+    private void checkMouseTouching() {
+        // Calcula a posição dos vértices das pontas
+        PVector upperLeftVertice = new PVector(pos.x, pos.y);
+        PVector lowerRightVertice = new PVector(pos.x + hitBoxSize.x, pos.y + hitBoxSize.y);
+
+        boolean lastState = mouseTouching;
+        // Verifica se tá dentro da área da hitbox
+        if (mouseX >= upperLeftVertice.x && mouseX <= lowerRightVertice.x) {
+            if (mouseY >= upperLeftVertice.y && mouseY <= lowerRightVertice.y) {
+                if (mouseTouching == false) handleMouseEnter();
+                mouseTouching = true;
+                return;
+            }
+        }
+        // se chegou até aqui, o mouse não tá na área da hitbox
+        mouseTouching = false;
+        if (lastState == true && mouseTouching == false) handleMouseLeave();
+
+    }
 
 }
 
@@ -154,6 +246,8 @@ public enum Shape {
  *
  * backgroundColor: cor da forma
  * shape: tipo de forma
+ * sprite: a imagem (se houver)
+ * text: o texto (se houver)
  */
 public class Frame extends UIObject {
 
@@ -164,6 +258,7 @@ public class Frame extends UIObject {
     color backgroundColor = DEFAULT_background_color;
     Shape shape = DEFAULT_shape;
     PImage sprite = null;
+    Text text = null;
 
     // apenas uma forma
     public Frame(PVector pos, PVector size, color backgroundColor, Shape shape) {
@@ -172,12 +267,25 @@ public class Frame extends UIObject {
         this.backgroundColor = backgroundColor;
         this.shape = shape;
     }
+    public Frame(PVector pos, PVector size, color backgroundColor, Shape shape, Text text) {
+        super(pos, size);
+        this.size = size;
+        this.backgroundColor = backgroundColor;
+        this.shape = shape;
+        this.text = text;
+    }
 
     // uma imagem
     public Frame(PVector pos, PVector size, PImage sprite) {
         super(pos, size);
         this.size = size;
         this.sprite = sprite;
+    }
+    public Frame(PVector pos, PVector size, PImage sprite, Text text) {
+        super(pos, size);
+        this.size = size;
+        this.sprite = sprite;
+        this.text = text;
     }
 
     // uma imagem que, se não for desenhada, aparecerá
@@ -188,6 +296,13 @@ public class Frame extends UIObject {
         this.sprite = sprite;
         this.backgroundColor = backgroundColor;
     }
+    public Frame(PVector pos, PVector size, PImage sprite, color backgroundColor, Text text) {
+        super(pos, size);
+        this.size = size;
+        this.sprite = sprite;
+        this.backgroundColor = backgroundColor;
+        this.text = text;
+    }
 
     // forma usada quando a posição e o tamanho do frame estão
     // em função de outra coisa
@@ -197,6 +312,13 @@ public class Frame extends UIObject {
         this.backgroundColor = backgroundColor;
         this.shape = shape;
     }
+    public Frame(color backgroundColor, Shape shape, Text text) {
+        super(new PVector(0, 0), new PVector(0, 0));
+        this.size = new PVector(0, 0);
+        this.backgroundColor = backgroundColor;
+        this.shape = shape;
+        this.text = text;
+    }
 
     // imagem usada quando a posição e o tamanho do frame estão
     // em função de outra coisa
@@ -205,11 +327,24 @@ public class Frame extends UIObject {
         this.size = new PVector(0, 0);
         this.sprite = sprite;
     }
+    public Frame(PImage sprite, Text text) {
+        super(new PVector(0, 0), new PVector(0, 0));
+        this.size = new PVector(0, 0);
+        this.sprite = sprite;
+        this.text = text;
+    }
     public Frame(PImage sprite, color backgroundColor) {
         super(new PVector(0, 0), new PVector(0, 0));
         this.size = new PVector(0, 0);
         this.sprite = sprite;
         this.backgroundColor = backgroundColor;
+    }
+    public Frame(PImage sprite, color backgroundColor, Text text) {
+        super(new PVector(0, 0), new PVector(0, 0));
+        this.size = new PVector(0, 0);
+        this.sprite = sprite;
+        this.backgroundColor = backgroundColor;
+        this.text = text;
     }
 
 
@@ -229,6 +364,11 @@ public class Frame extends UIObject {
 
         // desenha a imagem se houver
         if (sprite != null) image(sprite, pos.x, pos.y, size.x, size.y);
+        if (text != null) {
+            text.pos = pos;
+            text.size = size;
+            text.drawObject();
+        }
     }
 
 }
@@ -274,6 +414,35 @@ public class Text extends UIObject {
         this.backgroundFrame = backgroundFrame;
     }
 
+    // usado quando a posição e o tamanho do texto estão
+    // em função de outra coisa
+    public Text(String text) {
+        super(new PVector(0, 0), new PVector(50, 50));
+        this.text = text;
+    }
+    public Text(String text, color textColor) {
+        super(new PVector(0, 0), new PVector(50, 50));
+        this.text = text;
+        this.textColor = textColor;
+    }
+    public Text(String text, color textColor, int textSize, int horizontalTextAlign, int verticalTextAlign) {
+        super(new PVector(0, 0), new PVector(50, 50));
+        this.text = text;
+        this.textColor = textColor;
+        this.textSize = textSize;
+        this.horizontalTextAlign = horizontalTextAlign;
+        this.verticalTextAlign = verticalTextAlign;
+    }
+    public Text(String text, color textColor, int textSize, int horizontalTextAlign, int verticalTextAlign, PFont textFont) {
+        super(new PVector(0, 0), new PVector(50, 50));
+        this.text = text;
+        this.textColor = textColor;
+        this.textSize = textSize;
+        this.horizontalTextAlign = horizontalTextAlign;
+        this.verticalTextAlign = verticalTextAlign;
+        this.textFont = textFont;
+    }
+
     public void drawObject() {
         if (backgroundFrame != null) {
             backgroundFrame.pos = pos;
@@ -303,81 +472,53 @@ ArrayList<Button> buttons = new ArrayList<>();
 
 /**
  * Classe responsável pelos botões do jogo.
- * Note que essa classe não tem nada visual, apenas
- * uma base para os tipos de botão.
+ *
+ * frame: o "desenho" do botão
+ * interactable: se é possível clicar no botão ou "entrar na área dele"
+ *               ("entrar na área dele" significa que mouseTouching será atualizado)
+ * mouseTouching: se o mouse está tocando o botão (ou seja, se o
+ *                mouse está dentro da área do botão)
+ * mouseDown: se o mouse está sendo pressionado no botão
+ *
+ * Eventos:
+ * onClick: função que será executada quando o botão for clicado
  */
-private class Button {
+public class Button extends UIObject {
 
-    // Atributos //
-
-    // Forma da Hitbox
-    Shape shape = Shape.RECTANGLE;
-    // Tamanho da área de clique do botão. Para o retângulo,
-    // é a largura e a altura. Para o círculo, o primeiro valor
-    // será usado para representar o raio.
-    PVector hitboxSize = new PVector(30, 30);
-    // Posição do vértice superior esquerdo do botão.
-    PVector pos;
-    // Se o botão está visível ou não.
-    // Um botão invisível NÃO é renderizado de nenhuma forma por padrão.
-    // Ou seja, nenhuma de suas propriedades são atualizadas se ele estiver
-    // invisível (por natureza).
-    private boolean visible = true;
-    // Se o botão está "interágivel" (se o evento de
-    // clicar pode ser executado).
-    // Essa propriedade é atualizada sempre que a visibilidade é alterada.
-    // Ou seja, por natureza, um botão invisível não pode ser clicado,
-    // mas um visível pode.
+    Frame frame;
     private boolean interactable = true;
-    // Se o mouse está dentro da área do botão
-    private boolean mouseTouching = false;
+    private boolean mouseDown = false;
 
     // Funções de Evento //
 
-    // Funções que vão ser chamadas quando o respectivo
-    // evento acontecer.
-
     // Quando clicar no botão, essa função será chamada
     public Runnable onClick;
-    // Quando o mouse entrar na área do botão, essa função
-    // será chamada
-    public Runnable onMouseEnter;
-    // Quando o mouse sair da área do botão (considerando
-    // que ele estava dentro), essa função será chamada
-    public Runnable onMouseLeave;
 
-    Button(PVector pos, PVector size) {
-        if (buttons == null) {
-            buttons = new ArrayList<>();
-        }
-        this.pos = pos;
-        this.hitboxSize = size;
+    Button(PVector pos, PVector size, Frame frame) {
+        super(pos, size);
+        if (buttons == null) buttons = new ArrayList<>();
+        this.frame = frame;
 
         buttons.add(this);
     }
 
-    // Propriedades //
+    /**
+     * Método que será chamado todo frame para atualizar
+     * o estado do botão.
+     */
+    //private void update() {
+    //    if (!interactable) return; // só atualiza se tiver "interagível"
+    //}
 
-    // Altera a posição
-    public void setPos(PVector newPos) {
-        this.pos = newPos;
+    /**
+     * Desenha o botão na tela.
+     */
+    public void drawObject() {
+        frame.pos = pos;
+        frame.size = size;
+        frame.render();
     }
 
-    // Altera a visibilidade e a interação
-    public void setVisibility(boolean newVisibility) {
-        this.visible = newVisibility;
-        this.interactable = newVisibility;
-        if (!newVisibility) {
-            mouseTouching = false;
-        }
-    }
-
-    // Altera a hitbox
-    public void setHitboxSize(PVector newHitboxSize) {
-        this.hitboxSize = newHitboxSize;
-    }
-
-    // Eventos //
 
     // NÃO ALTERE OS MÉTODOS ABAIXO (que começam com "handle") EM HIPÓTESE ALGUMA!
     // Altere a respectiva função de evento!
@@ -386,76 +527,21 @@ private class Button {
      * Quando o mouse clicar no botão, esse método será chamado.
      * Use a função onClick para customizá-lo.
      */
-    private final void handleMousePressed() {
+    private final void handleMouseInteraction(boolean mouseDown, boolean mouseUp) {
         if (!interactable || !mouseTouching) return; // só executa se puder interagir
-        if (onClick != null) onClick.run();
+        if (mouseDown) handleMouseDown();
+        if (mouseUp) handleMouseUp();
     }
 
-    /**
-     * Método chamado quando o mouse entra na área do botão (não
-     * necessariamente é clicado, o mouse só toca o botão).
-     * Use a função onMouseEnter para customizá-lo.
-     */
-    private final void handleMouseEnter() {
-        //mouseTouching = true;
-        if (onMouseEnter != null) onMouseEnter.run();
+    private final void handleMouseDown() {
+        mouseOverUI = true;
+        mouseDown = true;
     }
 
-    /**
-     * Método chamado quando o mouse sai da área do botão (o
-     * mouse parou de clicar).
-     * Use a função onMouseLeave para customizá-lo.
-     */
-    private void handleMouseLeave() {
-        //mouseTouching = false;
-        if (onMouseLeave != null) onMouseLeave.run();
-    }
-
-    /**
-     * Método que verifica se o mouse está tocando o botão.
-     */
-    private void checkMouseTouching() {
-        // Calcula a posição dos vértices das pontas
-        PVector upperLeftVertice = new PVector(pos.x, pos.y);
-        PVector lowerRightVertice = new PVector(pos.x + hitboxSize.x, pos.y + hitboxSize.y);
-
-        mouseTouching = false;
-        // Verifica se tá dentro da área da hitbox
-        if (mouseX >= upperLeftVertice.x && mouseX <= lowerRightVertice.x) {
-            if (mouseY >= upperLeftVertice.y && mouseY <= lowerRightVertice.y) {
-                mouseTouching = true;
-            }
-        }
-        if (mouseTouching) {
-            handleMouseEnter();
-        } else {
-            handleMouseLeave();
-        }
-    }
-
-
-    /**
-     * Método que será chamado todo frame para atualizar
-     * o estado do botão.
-     */
-    public void update() {
-        if (!visible) return; // só atualiza se tiver visível
-        handleMousePressed();
-
-        // Verifica se o mouse está fora da tela
-        if ( (mouseX <= 0 || mouseX > width) || (mouseY <= 0 || mouseY > height) ) {
-            mouseTouching = false;
-        } else { // se o mouse está dentro da tela
-            checkMouseTouching();
-        }
-
-    }
-
-    /**
-     * Desenha o botão na tela.
-     */
-    public void render() {
-        // implementado nos filhos
+    private final void handleMouseUp() {
+        mouseOverUI = false;
+        if (onClick != null && mouseDown) onClick.run();
+        mouseDown = false;
     }
 
 }

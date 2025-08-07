@@ -1,4 +1,9 @@
+void mousePressed() {
+    UI.updateButtons(true, false);
+}
+
 void mouseReleased() {
+    UI.updateButtons(false, true);
     build();
 }
 

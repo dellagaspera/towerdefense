@@ -1,6 +1,9 @@
 float health = initialHealth;
 int money = initialMoney;
 
+// Se o mouse está em cima de qualquer coisa da interface
+boolean mouseOverUI = false;
+
 float deltaTime = 0;
 float lastMillis = 0;
 
@@ -12,7 +15,7 @@ UserInterface UI = new UserInterface();
 int grid[][];
 
 Frame a;
-Text b;
+Button b;
 
 /**
  * Configura o jogo
@@ -27,8 +30,13 @@ void settings() {
 void setup() {
     UI.setupUI();
 
-    a = new Frame(UI.cannon2);
-    b = new Text(new PVector((gridSize*gridX)/2-100, 50), new PVector(200, 50), "Teste", a);
+    a = new Frame(UI.cannon2, new Text("Teste", color(0, 0, 100)));
+    a.strokeWeight = 16;
+    a.hasStroke = true;
+    b = new Button(new PVector((gridSize*gridX)/2-100, 50), new PVector(200, 50), a);
+    b.onClick = () -> {
+        println("OI");
+    };
 
     lastMillis = millis();
     grid = new int[gridX][gridY];
@@ -47,6 +55,7 @@ void calculateDt() {
  * Atualiza o jogo a cada frame
  */
 void gameTick() {
+    // Lógica do jogo
     for(Structure s : structures) {
         s.update();
     }
@@ -67,13 +76,7 @@ void draw() {
     UI.draw();
     // a.render();
     v = (v+1)%255;
-    a.hasStroke = true;
     a.strokeColor = color(255-v, 100, 50);
-    a.strokeWeight = 16;
-    b.horizontalTextAlign = CENTER;
-    b.verticalTextAlign   = CENTER;
-    b.textColor = color(v, 100, 50);
-    b.render();
 }
 
 void updateGrid() {
