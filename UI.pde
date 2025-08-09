@@ -1,10 +1,19 @@
-ArrayList<UIObject> UIObjects = new ArrayList<UIObject>();
+// usa esse objeto pra lidar com a tela. O processing
+// me obriga a criar um objeto pra poder usar as funções de
+// desenhar na tela :) (ou passar sempre um objeto PApplet)
+UserInterface UI = new UserInterface();
+
+
+ArrayList<UIObject> uiObjects = new ArrayList<UIObject>();
+
 
 // NÃO use essa classe, use o objeto "UI"
-class UserInterface {
+private class UserInterface {
 
-    PImage cannon1 = null;
-    PImage cannon2 = null;
+    public HashMap<String, PImage> sprites = new HashMap<>();
+
+    Text moneyText;
+    Text healthText;
 
     /**
      * Inicializa a interface
@@ -16,6 +25,22 @@ class UserInterface {
 
         loadFonts();
         loadSprites();
+
+        moneyText = new Text(new PVector(10, 10), new PVector(100, 20), "Money: " + money);
+        moneyText.horizontalTextAlign = moneyText.verticalTextAlign = LEFT;
+        moneyText.textColor = color(0, 0, 100);
+        moneyText.textSize = 20;
+        moneyText.onUpdate = () -> {
+            moneyText.text = "Money: " + money;
+        };
+
+        healthText = new Text(new PVector(10, 30), new PVector(100, 20), "Health: " + health);
+        healthText.horizontalTextAlign = healthText.verticalTextAlign = LEFT;
+        healthText.textColor = color(0, 0, 100);
+        healthText.textSize = 20;
+        healthText.onUpdate = () -> {
+            healthText.text = "Health: " + health;
+        };
     }
 
     /**
@@ -34,66 +59,62 @@ class UserInterface {
      * Carrega as imagens
      */
     private void loadSprites() {
-        cannon1 = loadImage("sprites/cannon1.png");
-        cannon2 = loadImage("sprites/cannon2.png");
+        sprites.put("cannon1", loadImage("sprites/cannon1.png"));
+        sprites.put("cannon2", loadImage("sprites/cannon2.png"));
     }
 
     /**
      * Desenha as coisa na tela
      */
     public void draw() {
-        background(0, 0, 0);
+        background(120, 50, 50);
         updateUIObjects();
+        drawUIObjects();
         //updateButtons(false, false);
-        drawStats();
-        drawGame();
-        drawButtons();
+        //drawGame();
+        //drawButtons();
     }
 
-    /**
-     * Desenha os dados do jogador/jogo
-     */
-    private void drawStats() {
-        fill(0, 0, 100);
-        text("Health: " + health + "\nMoney: " + money, 10, 10);
+    private void updateUIObjects() {
+        for (UIObject uo : uiObjects)
+            uo.update();
     }
 
     /**
      * Desenha os elementos do jogo
      */
-    private void drawGame() {
+    /*private void drawGame() {
         for(Structure s : structures) {
             s.render();
         }
         for(Enemy e : enemies) {
             e.render();
         }
-    }
+    }*/
 
     /**
      * Desenha os botões do jogo
      */
-    public void drawButtons() {
+    /*public void drawButtons() {
         for (Button b : buttons) {
             b.render();
         }
-    }
+    }*/
 
-    private void updateUIObjects() {
-        for (UIObject uo : UIObjects) {
-            uo.update();
-        }
+    private void drawUIObjects() {
+        for (UIObject uo : uiObjects)
+            uo.render();
     }
 
     /**
      * Atualiza o estado dos botões
      */
-    public void updateButtons(boolean mouseDown, boolean mouseUp) {
+    /*public void updateButtons() {
         for (Button b : buttons) {
             b.update();
             b.handleMouseInteraction(mouseDown, mouseUp);
         }
-    }
+    }*/
 
 
 }
@@ -120,10 +141,11 @@ class UserInterface {
  * strokeWeight: a largura da borda (se tiver)
  *
  * Eventos:
- *  * onMouseEnter: função que será executada quando o mouse entrar na
- *  *               area do botão (quando mouseTouching ir de false para true)
- *  * onMouseLeave: função que será executada quando o mouse sair da
- *  *               area do botão (quando mouseTouching ir de true para false)
+ *  onMouseEnter: função que será executada quando o mouse entrar na
+ *                area do botão (quando mouseTouching ir de false para true)
+ *  onMouseLeave: função que será executada quando o mouse sair da
+ *                area do botão (quando mouseTouching ir de true para false)
+ *  onUpdate: função que será executada a cada frame
  *
  */
 
@@ -148,12 +170,15 @@ private abstract class UIObject {
 
     public Runnable onMouseEnter;
     public Runnable onMouseLeave;
+    public Runnable onUpdate;
 
     UIObject (PVector pos, PVector size) {
+        if (uiObjects == null) uiObjects = new ArrayList<>();
+
         this.pos = pos;
         this.size = size;
         this.hitBoxSize = size;
-        UIObjects.add(this);
+        uiObjects.add(this);
     }
 
     // NÃO use esse método. Ele literalmente só desenha o
@@ -184,6 +209,9 @@ private abstract class UIObject {
     }
 
     public void update() {
+        if (!active) return; // só atualiza se estiver ativo
+        if (onUpdate != null) onUpdate.run(); // chama a função de atualização
+
         // Verifica se o mouse está fora da tela
         if ( (mouseX <= 0 || mouseX > width-1) || (mouseY <= 0 || mouseY > height-1) ) {
             mouseTouching = false;
@@ -252,9 +280,10 @@ public enum Shape {
 public class Frame extends UIObject {
 
     // Constantes de padrão
-    private final color DEFAULT_background_color = color(255, 255, 255);
+    private final color DEFAULT_background_color = color(0, 0, 100);
     private final Shape DEFAULT_shape = Shape.RECTANGLE;
 
+    boolean drawShape = true;
     color backgroundColor = DEFAULT_background_color;
     Shape shape = DEFAULT_shape;
     PImage sprite = null;
@@ -280,12 +309,14 @@ public class Frame extends UIObject {
         super(pos, size);
         this.size = size;
         this.sprite = sprite;
+        this.drawShape = false;
     }
     public Frame(PVector pos, PVector size, PImage sprite, Text text) {
         super(pos, size);
         this.size = size;
         this.sprite = sprite;
         this.text = text;
+        this.drawShape = false;
     }
 
     // uma imagem que, se não for desenhada, aparecerá
@@ -295,6 +326,7 @@ public class Frame extends UIObject {
         this.size = size;
         this.sprite = sprite;
         this.backgroundColor = backgroundColor;
+        this.drawShape = false;
     }
     public Frame(PVector pos, PVector size, PImage sprite, color backgroundColor, Text text) {
         super(pos, size);
@@ -302,6 +334,7 @@ public class Frame extends UIObject {
         this.sprite = sprite;
         this.backgroundColor = backgroundColor;
         this.text = text;
+        this.drawShape = false;
     }
 
     // forma usada quando a posição e o tamanho do frame estão
@@ -351,17 +384,18 @@ public class Frame extends UIObject {
     // Desenha o frame na tela
     public void drawObject() {
         fill(backgroundColor);
-        switch (shape) {
-            case RECTANGLE:
-                rect(pos.x, pos.y, size.x, size.y);
-                break;
-            case CIRCLE:
-                circle(pos.x, pos.y, size.x);
-                break;
-            default:
-                throw new IllegalArgumentException("Class Frame does not support shape " + shape);
+        if (drawShape) {
+            switch (shape) {
+                case RECTANGLE:
+                    rect(pos.x, pos.y, size.x, size.y);
+                    break;
+                case CIRCLE:
+                    circle(pos.x, pos.y, size.x);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Class Frame does not support shape " + shape);
+            }
         }
-
         // desenha a imagem se houver
         if (sprite != null) image(sprite, pos.x, pos.y, size.x, size.y);
         if (text != null) {
@@ -514,6 +548,7 @@ public class Button extends UIObject {
      * Desenha o botão na tela.
      */
     public void drawObject() {
+        handleMouseInteraction(mouseDown, mouseUp);
         frame.pos = pos;
         frame.size = size;
         frame.render();

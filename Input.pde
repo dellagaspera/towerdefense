@@ -1,9 +1,14 @@
 void mousePressed() {
-    UI.updateButtons(true, false);
+    mouseDown = true;
+    mouseUp = false;
 }
 
+boolean mouseDown = false;
+boolean mouseUp = false;
+
 void mouseReleased() {
-    UI.updateButtons(false, true);
+    mouseDown = false;
+    mouseUp = true;
     build();
 }
 

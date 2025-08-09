@@ -1,11 +1,12 @@
 class Cannon extends Tower {
     float range = gridSize * 4;
+    Frame spriteFrame;
 
     void render() {       
         if(canShoot) 
-            image(UI.cannon2, pos.x, pos.y);
+            image(UI.sprites.get("cannon2"), pos.x, pos.y);
         else
-            image(UI.cannon1, pos.x, pos.y);
+            image(UI.sprites.get("cannon1"), pos.x, pos.y);
     }
 
     void shoot(Enemy e) {
@@ -19,6 +20,7 @@ class Cannon extends Tower {
 
     Cannon(int x, int y) {
         super(x, y, true, false, 1.75, 3);
+        spriteFrame = new Frame(new PVector(x*gridSize, y*gridSize), new PVector(gridSize, gridSize), UI.sprites.get("cannon1"));
     }
 
     boolean isInRange(PVector target) {
