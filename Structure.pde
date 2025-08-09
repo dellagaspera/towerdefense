@@ -1,20 +1,30 @@
 static ArrayList<Structure> structures = new ArrayList<>();
 
 class Structure {
-    PVector pos = new PVector();
-    int movementCost = 9999;
+    PVectorInt position;
+    PImage sprite = null;
 
-    void update() {
+    void _update() {
+        update();
+
         render();
     }
 
-    void render() {
-        fill(80, 80, 100);
-        circle(pos.x, pos.y, 24);
+    void update() {
+        
     }
 
-    Structure(int x, int y) {
-        this.pos = new PVector(x * gridSize, y * gridSize);
+    void render() {
+        stroke(255, 0, 0);
+        fill(100, 100, 100);
+        image(sprite, position.x * tileSize, position.y * tileSize, tileSize, tileSize);
+        noStroke();
+    }
+
+    Structure(PVectorInt position, PImage sprite) {
+        this.position = position;
+        this.sprite = sprite;
+
         structures.add(this);
     }
 }
