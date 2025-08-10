@@ -2,7 +2,8 @@ static ArrayList<Structure> structures = new ArrayList<>();
 
 class Structure {
     PVectorInt position;
-    PImage sprite = null;
+    Image sprite = null;
+    int weight = 1;
 
     void _update() {
         update();
@@ -15,15 +16,25 @@ class Structure {
     }
 
     void render() {
-        stroke(255, 0, 0);
+        // PImage da estrutura trocada por um objeto Image
+        /*stroke(255, 0, 0);
         fill(100, 100, 100);
         image(sprite, position.x * tileSize, position.y * tileSize, tileSize, tileSize);
-        noStroke();
+        noStroke();*/
+
+        // (não precisa dessa linha abaixo)
+        // sprite.render();
     }
 
     Structure(PVectorInt position, PImage sprite) {
         this.position = position;
-        this.sprite = sprite;
+        this.sprite = new Image(
+                new PVector(position.x * tileSize, position.y * tileSize),
+                new PVector(tileSize, tileSize),
+                sprite
+        );
+        this.sprite.setPriority(2);
+        Map.setWeight(position, weight);
 
         structures.add(this);
     }

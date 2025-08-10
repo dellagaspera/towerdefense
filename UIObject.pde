@@ -1,7 +1,16 @@
 static ArrayList<UIObject> uiObjects = new ArrayList<>();
+static HashMap<Integer, ArrayList<UIObject>> priorityUiObjects = new HashMap<>();
+int maxRenderPriority = 0;
+/*
+1 = background (path)
+2 = default (buildings, towers, etc)
+3 = foreground (UI, buttons, etc)
+ */
 
 class UIObject {
+    int renderPriority = 2;
     boolean isActive = true;
+    boolean isClickable = true;
     
     UIObject parent = null;
 
@@ -48,11 +57,24 @@ class UIObject {
         noStroke();
     }
 
+    void setPriority(int priority) {
+        renderPriority = priority;
+
+        if (!priorityUiObjects.containsKey(priority)) priorityUiObjects.put(priority, new ArrayList<>());
+
+        priorityUiObjects.get(priority).add(this);
+
+        if (priority > maxRenderPriority) {
+            maxRenderPriority = priority;
+        }
+    }
+
     UIObject(PVector position, PVector size) {
         this.position = position;
         this.size = size;
 
         init();
+        setPriority(renderPriority);
 
         uiObjects.add(this);
     }
@@ -63,6 +85,7 @@ class UIObject {
         this.size = size;
 
         init();
+        setPriority(renderPriority);
 
         uiObjects.add(this);
     }

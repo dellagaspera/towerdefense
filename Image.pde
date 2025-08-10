@@ -1,7 +1,7 @@
 class Image extends UIObject {
     PImage sprite = null;
 
-    boolean nineSlice = true;
+    boolean nineSlice = false;
     float sliceScale = 0.5;
 
     int hoverColor = color(255, 255, 255);
@@ -13,9 +13,9 @@ class Image extends UIObject {
         if(hover) {
             tint(red(hoverColor) * red(tintColor) / 255, green(hoverColor) * green(tintColor) / 255, blue(hoverColor) * blue(tintColor) / 255);
         } else tint(tintColor);
-        rect(realPosition.x, realPosition.y, size.x, size.y);
+        if (sprite == null) rect(realPosition.x, realPosition.y, size.x, size.y);
 
-        if(nineSlice) {
+        if(nineSlice && sprite != null) {
             int sliceWidth = (int)(sprite.width / 3);
             int sliceHeight = (int)(sprite.height / 3);
             
@@ -30,7 +30,7 @@ class Image extends UIObject {
             image(sprite.get(0, sliceHeight, sliceWidth, sliceHeight), realPosition.x, realPosition.y + sliceHeight * sliceScale, sliceWidth * sliceScale, size.y - 2 * sliceHeight * sliceScale);
             image(sprite.get(sliceWidth, sliceHeight, sliceWidth, sliceHeight), realPosition.x + sliceScale * sliceWidth, realPosition.y + sliceHeight * sliceScale, size.x - 2 * sliceWidth * sliceScale, size.y - 2 * sliceHeight * sliceScale);
             image(sprite.get(sliceWidth * 2, sliceHeight, sliceWidth, sliceHeight), realPosition.x + size.x - sliceScale * sliceWidth, realPosition.y + sliceHeight * sliceScale, sliceWidth * sliceScale, size.y - 2 * sliceHeight * sliceScale);
-        } else {
+        } else if(sprite != null){
             image(sprite, realPosition.x, realPosition.y, size.x, size.y);
         }
         noStroke();
