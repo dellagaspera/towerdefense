@@ -15,26 +15,20 @@ private class MapClass {
 
 
     MapClass() {
-        // desenha a posição inicial
-        new Image(
-                PVector.mult(startPos, tileSize),
-                new PVector(tileSize, tileSize),
-                sprites.map.get("path")
-        );
+
     }
 
-    private class Node {
+    public class Node {
         PVector pos;
         int id, custo = 1;
         float f, custoDoInicio, custoParaFim;
         Node parent; // nó pai (usado para reconstruir o caminho no a*)
-        Image image;
 
-        Node(PVector pos) {
+        public Node(PVector pos) {
             this.pos = pos;
             this.id = (int) pos.x + (int) pos.y * gridX; // id é a posição linear no grid
         }
-        Node(PVector pos, Node parent, float costFromStart, float costToEnd) {
+        public Node(PVector pos, Node parent, float costFromStart, float costToEnd) {
             this.pos = pos;
             this.id = (int) pos.x + (int) pos.y * gridX; // id é a posição linear no grid
             this.custoDoInicio = costFromStart;
@@ -45,7 +39,7 @@ private class MapClass {
     }
 
     public void setWeight(PVector pos, int weight) {
-        setWeight(new PVector((int)pos.x, (int)pos.y), weight);
+        setWeight(new PVectorInt(pos), weight);
     }
     public void setWeight(PVectorInt pos, int weight) {
         Node node = getNodeFrom(pos);
@@ -166,15 +160,15 @@ private class MapClass {
         path[(int) pos.x][(int) pos.y] = node;
 
         // Cria a imagem
-        node.image = new Image(
-                PVector.mult(pos, tileSize),
-                new PVector(tileSize, tileSize),
-                sprites.map.get("path")
-        ){
-            void onClick() { clickingOnPath = true; }
-        };
-        node.image.setPriority(1);
-        node.image.nineSlice = false;
+        // node.image = new Image(
+        //         PVector.mult(pos, tileSize),
+        //         new PVector(tileSize, tileSize),
+        //         sprites.map.get("path")
+        // ){
+        //     void onClick() { clickingOnPath = true; }
+        // };
+        // node.image.setPriority(1);
+        // node.image.nineSlice = false;
 
     }
 
@@ -277,12 +271,12 @@ private class MapClass {
             next = current;
             current = current.parent;
 
-            next.image.sprite = sprites.map.get("selectedPath"); // marca o nó como parte do caminho
+            // next.image.sprite = sprites.map.get("selectedPath"); // marca o nó como parte do caminho
 
             nextNodeGrid[(int) current.pos.x][(int) current.pos.y] = next;
 
         }
-        if (current != null) current.image.sprite = sprites.map.get("selectedPath");
+        // if (current != null) current.image.sprite = sprites.map.get("selectedPath");
     }
 
     /**
@@ -298,7 +292,7 @@ private class MapClass {
             for (int j = 0; j < gridY; j++) {
                 Node node = path[i][j];
                 if (node != null) {
-                    node.image.sprite = sprites.map.get("path");
+                    // node.image.sprite = sprites.map.get("path");
                 }
             }
         }
@@ -373,5 +367,9 @@ private class MapClass {
         // o código NUNCA deveria chegar aqui, pois sempre há um caminho
         // println("Não foi possível encontrar um caminho do início ao fim.");
         generatePath(); // gera o caminho dnv
+    }
+
+    public Node[][] getPath() {
+        return path;
     }
 }
