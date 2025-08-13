@@ -111,7 +111,8 @@ void draw() {
     MapClass.Node[][] path = Map.getPath();
     for(int i = 0; i < gridX; i++) {
         for(int j = 0; j < gridY; j++) {
-            if(path[i][j] == null) image(sprites.map.get("grass"), i * tileSize, j * tileSize, tileSize, tileSize);
+            if(path[i][j] == null)
+                image(sprites.map.get("grass"), i * tileSize, j * tileSize, tileSize, tileSize);
             else {
                 boolean l = false, r = false, t = false, b = false;
                 if(i + 1 < gridX) if(path[i + 1][j] != null) l = true;

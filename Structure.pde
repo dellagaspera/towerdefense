@@ -1,4 +1,5 @@
 static ArrayList<Structure> structures = new ArrayList<>();
+static HashMap<PVectorInt, Structure> structuresGrid = new HashMap<>();
 
 class Structure {
     PVectorInt position;
@@ -13,6 +14,21 @@ class Structure {
 
     void update() {
         
+    }
+
+    void _destroy() {
+        sprite.removeObject();
+        structures.remove(this);
+        structuresGrid.remove(position);
+        destroy();
+    }
+
+    void attacked(float damage) {
+
+    }
+
+    void destroy() {
+
     }
 
     void render() {
@@ -37,5 +53,6 @@ class Structure {
         Map.setWeight(position, weight);
 
         structures.add(this);
+        structuresGrid.put(position, this);
     }
 }

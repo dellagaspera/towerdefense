@@ -52,12 +52,27 @@ private class MapClass {
         }
     }
 
+    public boolean reachedEnd(PVectorInt pos) {
+        return reachedEnd(new PVector((float)pos.x, (float)pos.y));
+    }
+    public boolean reachedEnd(PVector pos) {
+        return pos.equals(endPos);
+
+    }
+
+    public PVector getNextPositionFrom(PVectorInt pos) {
+        return getNextPositionFrom(new PVector((float)pos.x, (float)pos.y));
+    }
+
     public PVector getNextPositionFrom(PVector pos) {
-        if (!isValidPos(pos)) return null; // posição inválida
+        if (!isValidPos(pos))
+            return null; // posição inválida
 
 
         Node currentNode = getNodeFrom(pos);
-        if (currentNode == null) return null; // não há nó na posição
+        if (currentNode == null)
+            return null; // não há nó na posição
+
 
 
         // se o próximo nó já foi calculado, retorna a posição dele
@@ -66,7 +81,7 @@ private class MapClass {
 
 
         // se não, calcula o próximo nó usando A*
-        calculateBestPath(getNodeFrom(startPos), getNodeFrom(endPos));
+        calculateBestPath(getNodeFrom(pos), getNodeFrom(endPos));
         nextNode = nextNodeGrid[(int) pos.x][(int) pos.y];
         return nextNode != null ? nextNode.pos : null;
     }
@@ -365,7 +380,7 @@ private class MapClass {
 
         // se chegou até aqui, não encontrou um caminho
         // o código NUNCA deveria chegar aqui, pois sempre há um caminho
-        // println("Não foi possível encontrar um caminho do início ao fim.");
+        println("Não foi possível encontrar um caminho do início ao fim.");
         generatePath(); // gera o caminho dnv
     }
 

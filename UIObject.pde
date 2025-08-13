@@ -8,7 +8,7 @@ int maxRenderPriority = 0;
  */
 
 class UIObject {
-    int renderPriority = 2;
+    int renderPriority = 3;
     boolean isActive = true;
     boolean isClickable = true;
     
@@ -58,6 +58,11 @@ class UIObject {
     }
 
     void setPriority(int priority) {
+
+        if (priorityUiObjects.containsKey(renderPriority)) {
+            priorityUiObjects.get(renderPriority).remove(this);
+        }
+
         renderPriority = priority;
 
         if (!priorityUiObjects.containsKey(priority)) priorityUiObjects.put(priority, new ArrayList<>());
@@ -69,6 +74,12 @@ class UIObject {
         }
     }
 
+    void removeObject() {
+        // obs.: não lança exceção se não estiver nas listas
+        uiObjects.remove(this);
+        priorityUiObjects.get(renderPriority).remove(this);
+    }
+
     UIObject(PVector position, PVector size) {
         this.position = position;
         this.size = size;
@@ -78,6 +89,7 @@ class UIObject {
 
         uiObjects.add(this);
     }
+    
 
     UIObject(UIObject parent, PVector size) {
         this.parent = parent;

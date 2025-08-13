@@ -18,6 +18,18 @@ class PVectorInt {
 
     PVectorInt() {};
 
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PVectorInt that = (PVectorInt) o;
+        return x == that.x && y == that.y;
+    }
+
+    public int hashCode() {
+        return 31 * x + y;
+    }
+
+
     String toString() {
         return "(" + x + "," + y + ")";
     }
