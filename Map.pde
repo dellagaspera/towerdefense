@@ -23,6 +23,7 @@ private class MapClass {
         int id, custo = 1;
         float f, custoDoInicio, custoParaFim;
         Node parent; // nó pai (usado para reconstruir o caminho no a*)
+        Image image;
 
         public Node(PVector pos) {
             this.pos = pos;
@@ -128,7 +129,7 @@ private class MapClass {
         PVector nextPos = getBestNextPos(pos);
 
         // distância segura até o final
-        float safeDistance = 5;
+        float safeDistance = 2;
 
         if (random(1) < 0.4 && pos.dist(endPos) > safeDistance) {
             int tries = 0;

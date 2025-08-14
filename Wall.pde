@@ -5,7 +5,7 @@ class Wall extends Structure {
     Text healthText;
 
     public Wall(PVectorInt position) {
-        super(position, sprites.map.get("path"));
+        super(position, sprites.map.get("wall"));
         Map.setWeight(position, weight + (int)health);
 
         healthText = new Text(
@@ -36,7 +36,6 @@ class Wall extends Structure {
         );
     }
     public void destroy() {
-        println("destruiu");
         Map.setWeight(position, 0);
         healthText.removeObject();
     }

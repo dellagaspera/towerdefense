@@ -1,9 +1,9 @@
 SpriteManager sprites = new SpriteManager(new String[] {
-    "cannon", "button", "path", "selectedPath", 
-    "grass", "dirt", "dirt_r", "dirt_l", 
-    "dirt_t", "dirt_b", "dirt_tr", "dirt_tl", 
-    "dirt_br", "dirt_bl", "dirt_tb", "dirt_lr",
-    "dirt_ltr", "dirt_trb", "dirt_rbl", "dirt_blt"});
+    "cannon", "button", "wall", "selectedPath",
+    "dirts/grass", "dirts/dirt_15", "dirts/dirt_1", "dirts/dirt_2",
+    "dirts/dirt_3", "dirts/dirt_4", "dirts/dirt_5", "dirts/dirt_6",
+    "dirts/dirt_7", "dirts/dirt_8", "dirts/dirt_9", "dirts/dirt_10",
+    "dirts/dirt_11", "dirts/dirt_12", "dirts/dirt_13", "dirts/dirt_14"});
 
 final int tileSize = 48;
 final int gridX = 24;
@@ -102,47 +102,62 @@ void setup() {
     Text buildPanelWallLabel = new Text(buildPanelWall, buildPanelWall.size, "Wall");
     buildPanelWallLabel.setPriority(3);
 
+    setupBackground();
+
     new Enemy(new PVectorInt(Map.startPos));
+}
+
+void setupBackground() {
+    MapClass.Node[][] path = Map.getPath();
+    for (int i = 0; i < gridX; i++) {
+        for (int j = 0; j < gridY; j++) {
+            if (path[i][j] == null) {
+                Image image = new Image(
+                        new PVector(i * tileSize, j * tileSize),
+                        new PVector(tileSize, tileSize),
+                        sprites.map.get("dirts/grass")
+                );
+                image.isClickable = false;
+                image.setPriority(1);
+            } else {
+                // bit-masking
+                // 0 = no path (grass)
+                // 1 = has path (dirt)
+
+                int v = 0;
+                if (i - 1 >= 0 && path[i - 1][j] != null) v += 1 << 0; // left (1)
+                if (i + 1 < gridX && path[i + 1][j] != null) v += 1 << 1; // right (2)
+                if (j - 1 >= 0 && path[i][j - 1] != null) v += 1 << 2; // top (4)
+                if (j + 1 < gridY && path[i][j + 1] != null) v += 1 << 3; // bottom (8)
+
+                Image image = new Image(
+                        new PVector(i * tileSize, j * tileSize),
+                        new PVector(tileSize, tileSize),
+                        sprites.map.get("dirts/dirt_" + v)
+                );
+                image.isClickable = false;
+                image.setPriority(1);
+                path[i][j].image = image;
+            }
+        }
+    }
+}
+
+void drawBackground() {
+    MapClass.Node[][] path = Map.getPath();
+    for (int i = 0; i < gridX; i++) {
+        for (int j = 0; j < gridY; j++) {
+            if (path[i][j] == null)
+                image(sprites.map.get("dirts/grass"), i * tileSize, j * tileSize, tileSize, tileSize);
+            // else path[i][j].sprite.render();
+        }
+    }
 }
 
 void draw() {
     Time.update();
 
-    MapClass.Node[][] path = Map.getPath();
-    for(int i = 0; i < gridX; i++) {
-        for(int j = 0; j < gridY; j++) {
-            if(path[i][j] == null)
-                image(sprites.map.get("grass"), i * tileSize, j * tileSize, tileSize, tileSize);
-            else {
-                boolean l = false, r = false, t = false, b = false;
-                if(i + 1 < gridX) if(path[i + 1][j] != null) l = true;
-                if(j + 1 < gridY) if(path[i][j + 1] != null) t = true;
-                if(i - 1 >= 0) if(path[i - 1][j] != null) r = true;
-                if(j - 1 >= 0) if(path[i][j - 1] != null) b = true;
-                PImage sprite = sprites.map.get("dirt");
-                if(!b && l && r && t) sprite = sprites.map.get("dirt_t");
-                if(b && l && !r && t) sprite = sprites.map.get("dirt_l");
-                if(b && !l && r && t) sprite = sprites.map.get("dirt_r");
-                if(b && l && r && !t) sprite = sprites.map.get("dirt_b");
-                
-                if(b && !l && r && !t) sprite = sprites.map.get("dirt_br");
-                if(b && l && !r && !t) sprite = sprites.map.get("dirt_bl");
-                if(!b && !l && r && t) sprite = sprites.map.get("dirt_tr");
-                if(!b && l && !r && t) sprite = sprites.map.get("dirt_tl");
-                
-                if(!b && !l && !r && t) sprite = sprites.map.get("dirt_ltr");
-                if(!b && !l && r && !t) sprite = sprites.map.get("dirt_trb");
-                if(b && !l && !r && !t) sprite = sprites.map.get("dirt_rbl");
-                if(!b && l && !r && !t) sprite = sprites.map.get("dirt_blt");
-
-                if(b && !l && !r && t) sprite = sprites.map.get("dirt_lr");
-                if(!b && l && r && !t) sprite = sprites.map.get("dirt_tb");
-                image(sprite, i * tileSize, j * tileSize, tileSize, tileSize);
-                // textSize(10);
-                // text("b " + b + "\nt " + t + "\nr " + r + "\nl " + l, i * tileSize, j * tileSize, tileSize, tileSize);
-            }
-        }
-    }
+    drawBackground();
 
     for (int i = 0; i <= maxRenderPriority; i++) {
         if(!priorityUiObjects.containsKey(i)) continue;

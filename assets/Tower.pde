@@ -1,3 +1,0 @@
-// class Tower extends Structure {
-
-// }
