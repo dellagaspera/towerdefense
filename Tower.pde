@@ -1,105 +1,101 @@
-static enum TargetSorting {CLOSEST, STRONGEST, WEAKEST};
+enum Targeting {STRONGEST, WEAKEST, CLOSEST, FURTHERST};
 
 class Tower extends Structure {
 
-    float range = gridSize * 4;
-
-    float shootCooldown = 0;
-    float shootDelay = 0.75;
+    float reloadDuration = 2;
+    float reloadProgress = 0;
     boolean canShoot = true;
-    float damage = 5;
 
-    boolean ground = false;
-    boolean aerial = false;
+    int damage = 1;
+    int range = 3; // in tiles
 
-    TargetSorting targetSort = TargetSorting.CLOSEST;
+    Targeting targeting = Targeting.CLOSEST;
+    Enemy target = null;
+
+    void shoot() {
+        if(target == null) return;
+        
+        reloadProgress = 0;
+        canShoot = false;
+
+        target.hurt(damage);
+    }
 
     void update() {
-        render();
+        setTarget();
 
-        if(canShoot) {
-            Enemy target = chooseTarget(possibleTargets());
-
-            if(target != null) shoot(target);
-        }
-
-        if(shootCooldown >= shootDelay) {
-            canShoot = true;
-        } else shootCooldown += deltaTime;
-    }
-
-    void render() {        
-        fill(80, 40, 100);
-        if(canShoot)
-            fill(80, 80, 100);
-        circle(pos.x, pos.y, 40);
-    }
-
-    void shoot(Enemy e) {
-        if(canShoot) {
-            canShoot = false;
-            shootCooldown = 0;
-
-            e.health -= damage;
+        if(canShoot && target != null) {
+            shoot();
+        } else {
+            reloadProgress += Time.deltaTime;
+            if(reloadProgress >= reloadDuration) canShoot = true;
         }
     }
 
-    Tower(int x, int y, boolean ground, boolean aerial, float shootDelay, float damage) {
-        super(x, y);
-
-        this.ground = ground;
-        this.aerial = aerial;
-
-        this.shootDelay = shootDelay;
-        this.damage = damage;
-    }
-
-    boolean isInRange(PVector target) {
-        if(pos.dist(target) <= range) return true;
-        return false;
-    }
-
-    Enemy[] possibleTargets() {
-        Enemy[] targets = new Enemy[0];
+    ArrayList<Enemy> findEnemiesInRange() {
+        ArrayList<Enemy> inRange = new ArrayList<>();
         
         for(Enemy e : enemies) {
-            if(isInRange(e.pos) && !(!aerial && e.aerial) && !(!ground && !e.aerial) && e.health > 0) {
-                targets = (Enemy[])append(targets, e);
+            if(new PVector(position.x, position.y).mult(tileSize).dist(e.pos) <= range * tileSize) {
+                inRange.add(e);
             }
         }
 
-        return targets;
+        return inRange;
     }
 
-    Enemy chooseTarget(Enemy[] targets) {
-        Enemy target = null;
+    void setTarget() {
+        ArrayList<Enemy> inRange = findEnemiesInRange();
+        if(inRange.size() == 0) { 
+            target = null; 
+            return; 
+        } else target = inRange.get(0);
 
-        if(targetSort == TargetSorting.CLOSEST) {
-            float closestDist = 9999999;
-            for(Enemy e : targets) {
-                if(pos.dist(e.pos) <= closestDist) {
+        if(targeting == Targeting.CLOSEST) {
+            float temp = position.dist(inRange.get(0).pos);
+            for(Enemy e : inRange) {
+                float dist = new PVector(position.x, position.y).mult(tileSize).dist(e.pos);
+                if(dist < temp) {
+                    temp = dist;
                     target = e;
-                    closestDist = pos.dist(e.pos);
-                }
-            }
-        } else if(targetSort == TargetSorting.STRONGEST) {
-            float mostHealth = -1;
-            for(Enemy e : targets) {
-                if(e.health > mostHealth) {
-                    target = e;
-                    mostHealth = e.health;
-                }
-            }
-        } else if(targetSort == TargetSorting.WEAKEST) {
-            float leastHealth = 9999999;
-            for(Enemy e : targets) {
-                if(e.health < leastHealth) {
-                    target = e;
-                    leastHealth = e.health;
                 }
             }
         }
+        if(targeting == Targeting.FURTHERST) {
+            float temp = position.dist(inRange.get(0).pos);
+            for(Enemy e : inRange) {
+                float dist = new PVector(position.x, position.y).mult(tileSize).dist(e.pos);
+                if(dist > temp) {
+                    temp = dist;
+                    target = e;
+                }
+            }
+        }
+        if(targeting == Targeting.WEAKEST) {
+            int temp = inRange.get(0).health;
+            for(Enemy e : inRange) {
+                int hp = e.health;
+                if(hp < temp) {
+                    temp = hp;
+                    target = e;
+                }
+            }
+        }
+        if(targeting == Targeting.STRONGEST) {
+            int temp = inRange.get(0).health;
+            for(Enemy e : inRange) {
+                int hp = e.health;
+                if(hp > temp) {
+                    temp = hp;
+                    target = e;
+                }
+            }
+        }
+    }
 
-        return target;
+    public Tower(PVectorInt position, PImage sprite, int damage, float reloadDuration) {
+        super(position, sprite);
+        this.damage = damage;
+        this.reloadDuration = reloadDuration;
     }
 }
