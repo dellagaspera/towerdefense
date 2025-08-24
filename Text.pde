@@ -3,20 +3,40 @@ PFont poppins;
 class Text extends UIObject {
     String text;
     PFont font = poppins;
-    int textColor = color(0, 0, 0);
-    int fontSize = 16;
+    int textColor;
+    Integer fontSize;
     int horizontalAlign;
     int verticalAlign;
+
+    boolean textOutline;
+    int outlineColor;
+
+    boolean textBg;
+    int bgColor;
 
     Text(PVector position, PVector size, String text) {
         super(position, size);
         this.text = text;
+        if(fontSize == null) fontSize = 16;
         // init();
     }
 
     Text(UIObject parent, PVector size, String text) {
         super(parent, size);
         this.text = text;
+        if(fontSize == null) fontSize = 16;
+        // init();
+    }
+
+    Text(PVector position, PVector size) {
+        super(position, size);
+        if(fontSize == null) fontSize = 16;
+        // init();
+    }
+
+    Text(UIObject parent, PVector size) {
+        super(parent, size);
+        if(fontSize == null) fontSize = 16;
         // init();
     }
 
@@ -26,12 +46,36 @@ class Text extends UIObject {
     // }
 
     void render() {
+        noFill();
+        noStroke();
         textFont(font);
-        fill(textColor);
         textSize(fontSize);
         textAlign(horizontalAlign, verticalAlign);
+
+        if(textBg) {
+            fill(bgColor);
+            float w = textWidth(text) + 8;
+            float horizontalOffset = 0;
+
+            switch(horizontalAlign) {
+                case CENTER: horizontalOffset = (size.x - w) / 2; break;
+                case LEFT: horizontalOffset = 0; break;
+                case RIGHT: horizontalOffset = (size.x - w); break;
+            }
+
+            rect(realPosition.x + horizontalOffset, realPosition.y, w, size.y);
+        }
+        
+        if(textOutline) {
+            fill(outlineColor);
+            for(int angle = 0; angle < 360; angle += 15) {
+                text(text, realPosition.x + (cos(radians(angle)) * 3), realPosition.y + (sin(radians(angle)) * 4), size.x, size.y);
+            }
+        }
+
+        fill(textColor);
         // println("textAlign(" + horizontalAlign + "," + verticalAlign + ");");
-        text(text, realPosition.x, realPosition.y, size.x, size.y);
+        text(text, int(realPosition.x), int(realPosition.y), size.x, size.y);
 
         // fill(0, 0, 0, 0);
         // stroke(255, 255, 0);

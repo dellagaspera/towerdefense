@@ -4,8 +4,8 @@ class Image extends UIObject {
     boolean nineSlice = false;
     float sliceScale = 0.5;
 
-    int hoverColor = color(255, 255, 255);
-    int tintColor = color(255, 255, 255);
+    Integer hoverColor;
+    Integer tintColor;
 
     void render() {
         stroke(255, 255, 0);
@@ -40,10 +40,16 @@ class Image extends UIObject {
     Image(PVector position, PVector size, PImage sprite) {
         super(position, size);
         this.sprite = sprite;
+
+        if(hoverColor == null) hoverColor = color(255, 255, 255);
+        if(tintColor == null) tintColor = color(255, 255, 255);
     }
 
     Image(UIObject parent, PVector size, PImage sprite) {
         super(parent, size);
         this.sprite = sprite;
+
+        if(hoverColor == null) hoverColor = color(255, 255, 255);
+        if(tintColor == null) tintColor = color(255, 255, 255);
     }
 }

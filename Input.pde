@@ -1,6 +1,6 @@
 boolean mouseOnPath = false;
 void mouseReleased() {
-    mouseOnPath = Map.getNodeFrom(worldToGridPosition(new PVector(mouseX, mouseY))) != null;
+    if(mouseButton != LEFT) return;
     boolean clickedUi = false;
     for(UIObject o : uiObjects) {
         if(o.hover && o.isActive && o.isClickable) {
@@ -10,5 +10,18 @@ void mouseReleased() {
     }
     if(clickedUi) return;
 
-    if(buildMode) build();
+    if(buildMode) if(build()) return;
+
+    Structure s = structuresGrid.get(worldToGridPosition(new PVector(mouseX, mouseY)));
+    if(s != null) {
+        if(s.isTower()) {
+            uiObjects.remove((UIObject)inspectMenu);
+            new InspectMenu((Tower)s);
+            return;
+        }
+    }
+            
+    uiObjects.remove((UIObject)inspectMenu);
+    clearInspectMenu();
+    inspectMenu = null;
 }

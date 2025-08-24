@@ -7,13 +7,13 @@ PVectorInt spawners[] = new PVectorInt[nSpawner];
 
 private class MapClass {
 
-    // private final PVector startPos = new PVector(gridX-1, gridY/2);
-    private final PVector endPos = new PVector(0, gridY/2);
+    // private final PVector startPos = new PVector(gridX-1, (gridY-1)/2);
+    private final PVector endPos = new PVector(0, (gridY-1)/2);
 
     private PVector[] directions = {new PVector(1, 0), new PVector(-1, 0), new PVector(0, 1), new PVector(0, -1)};
 
-    private Node[][] path = new Node[gridX][gridY];
-    public Node[][] nextNodeGrid = new Node[gridX][gridY]; // nextNodeGrid[x][y] = próximo nó a ser visitado pelo inimigo em x,y
+    private Node[][] path = new Node[gridX][(gridY-1)];
+    public Node[][] nextNodeGrid = new Node[gridX][(gridY-1)]; // nextNodeGrid[x][y] = próximo nó a ser visitado pelo inimigo em x,y
 
 
     MapClass() {
@@ -90,7 +90,7 @@ private class MapClass {
     }
 
     private boolean isValidPos(PVector pos) {
-        return (pos.x >= 0 && pos.x < gridX && pos.y >= 0 && pos.y < gridY);
+        return (pos.x >= 0 && pos.x < gridX && pos.y >= 0 && pos.y < (gridY-1));
     }
 
     private Node getNodeFrom(PVector pos) {
@@ -156,7 +156,7 @@ private class MapClass {
     // para debugar se precisar
     private void printPath() {
         println("=========================================");
-        for (int j = 0; j < gridY; j++) {
+        for (int j = 0; j < (gridY-1); j++) {
             for (int k = 0; k < gridX; k++) {
                 if (path[k][j] != null) {
                     print("1");
@@ -181,7 +181,7 @@ private class MapClass {
         // node.image = new Image(
         //         PVector.mult(pos, tileSize),
         //         new PVector(tileSize, tileSize),
-        //         sprites.map.get("path")
+        //         sprites.png.get("path")
         // ){
         //     void onClick() { mouseOnPath = true; }
         // };
@@ -195,14 +195,14 @@ private class MapClass {
             // boolean invalidPosition = false;
             // do {
             //     invalidPosition = false;
-            //     spawners[i] = new PVectorInt(gridX - 1, (int)random(0, gridY)); 
+            //     spawners[i] = new PVectorInt(gridX - 1, (int)random(0, (gridY-1))); 
             //     for(PVectorInt p : spawners) {
             //         if(p == null) continue;
             //         if(spawners[i].y == p.y) invalidPosition = true;
             //     }
             // } while(invalidPosition);
             
-                spawners[i] = new PVectorInt(gridX - 1, (int)random(0, gridY)); 
+                spawners[i] = new PVectorInt(gridX - 1, (int)random(0, (gridY-1))); 
         }
 
         for(PVectorInt p : spawners) {
@@ -308,28 +308,29 @@ private class MapClass {
             next = current;
             current = current.parent;
 
-            // next.image.sprite = sprites.map.get("selectedPath"); // marca o nó como parte do caminho
+            // next.image.sprite = sprites.png.get("selectedPath"); // marca o nó como parte do caminho
 
             nextNodeGrid[(int) current.pos.x][(int) current.pos.y] = next;
 
         }
-        // if (current != null) current.image.sprite = sprites.map.get("selectedPath");
+        // if (current != null) current.image.sprite = sprites.png.get("selectedPath");
     }
 
     /**
      * Calcula o próximo nó a ser visitado por cada nó do grid usando A*.
      * Isso é usado para determinar a direção que os inimigos devem seguir.
      */
+    /*
     public void calculateBestPath(Node start, Node end) {
         // Reinicia tudo
-        nextNodeGrid = new Node[gridX][gridY];
+        nextNodeGrid = new Node[gridX][(gridY-1)];
 
         // Reinicia as cores
         for (int i = 0; i < gridX; i++) {
-            for (int j = 0; j < gridY; j++) {
+            for (int j = 0; j < (gridY-1); j++) {
                 Node node = path[i][j];
                 if (node != null) {
-                    // node.image.sprite = sprites.map.get("path");
+                    // node.image.sprite = sprites.png.get("path");
                 }
             }
         }
@@ -388,8 +389,8 @@ private class MapClass {
                     // se o custo do caminho atual é menor que o custo já registrado
 
                     vizinho.custoDoInicio = novoCustoDoInicio;
-                    /* não precisa dessa linha, pois a heurística já foi calculada)
-                    vizinho.custoParaFim = calculateHeuristic(vizinho, end); */
+                    // não precisa dessa linha, pois a heurística já foi calculada)
+                    //vizinho.custoParaFim = calculateHeuristic(vizinho, end); 
                     vizinho.f = vizinho.custoDoInicio + vizinho.custoParaFim;
                     vizinho.parent = nodeAtual;
                     openList.add(vizinho); // re-adiciona para atualizar a prioridade
@@ -404,6 +405,73 @@ private class MapClass {
         // o código NUNCA deveria chegar aqui, pois sempre há um caminho
         println("Não foi possível encontrar um caminho do início ao fim.");
         //generatePath(); // gera o caminho dnv
+    }
+    */
+
+    public void clearPath() {
+        nextNodeGrid = new Node[gridX][(gridY-1)];
+    }
+
+    public void calculateBestPath(Node start, Node end) {
+        // Reinicia tudo
+        nextNodeGrid = new Node[gridX][(gridY-1)];
+
+        PriorityQueue<Node> openList = new PriorityQueue<Node>(
+            (a, b) -> Float.compare(a.f, b.f)
+        );
+
+        // Usa um mapa para rastrear o custo real do caminho mais curto encontrado
+        HashMap<Node, Float> gScore = new HashMap<>();
+        // Usa um mapa para rastrear o pai de cada nó no melhor caminho
+        HashMap<Node, Node> parentMap = new HashMap<>();
+
+        gScore.put(start, 0f);
+        openList.add(start);
+        start.f = calcularHeuristica(start, end);
+
+        while (!openList.isEmpty()) {
+            Node nodeAtual = openList.poll();
+
+            if (nodeAtual.pos.equals(end.pos)) {
+                // Reconstroi o caminho a partir do parentMap
+                reconstructPath(nodeAtual, parentMap);
+                return;
+            }
+
+            // Explora os vizinhos
+            for (Node vizinho : obterVizinhos(nodeAtual)) {
+                float novoCustoDoInicio = gScore.get(nodeAtual) + vizinho.custo;
+
+                // Se o novo caminho para o vizinho é melhor
+                if (novoCustoDoInicio < gScore.getOrDefault(vizinho, Float.MAX_VALUE)) {
+                    // Atualiza os valores e adiciona/re-adiciona à lista aberta
+                    parentMap.put(vizinho, nodeAtual);
+                    gScore.put(vizinho, novoCustoDoInicio);
+                    vizinho.f = novoCustoDoInicio + calcularHeuristica(vizinho, end);
+                    
+                    // Remove o nó antigo com custo mais alto antes de adicionar o novo. 
+                    // A prioridade é atualizada quando um nó é adicionado.
+                    openList.remove(vizinho); 
+                    openList.add(vizinho);
+                }
+            }
+        }
+        
+        // Se chegou aqui, não há caminho
+        println("Não foi possível encontrar um caminho do início ao fim.");
+    }
+
+    private void reconstructPath(Node current, HashMap<Node, Node> parentMap) {
+        Node next;
+        while (parentMap.containsKey(current)) {
+            next = current;
+            current = parentMap.get(current);
+
+            // Certifique-se de que a posição do nó pai é válida para o grid
+            if (current.pos.x >= 0 && current.pos.x < gridX && current.pos.y >= 0 && current.pos.y < (gridY-1)) {
+                nextNodeGrid[(int) current.pos.x][(int) current.pos.y] = next;
+            }
+        }
     }
 
     public Node[][] getPath() {

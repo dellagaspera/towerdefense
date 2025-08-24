@@ -1,4 +1,4 @@
-enum Targeting {STRONGEST, WEAKEST, CLOSEST, FURTHERST};
+enum Targeting {STRONGEST, WEAKEST, CLOSEST, FURTHEST};
 
 class Tower extends Structure {
 
@@ -6,11 +6,40 @@ class Tower extends Structure {
     float reloadProgress = 0;
     boolean canShoot = true;
 
+    int sellPrice;
+
     int damage = 1;
     int range = 3; // in tiles
 
     Targeting targeting = Targeting.CLOSEST;
     Enemy target = null;
+    
+    final Upgrade[] upgrades = new Upgrade[3];
+
+    void upgrade(int idx) {
+        Upgrade u = upgrades[idx];
+        if(u == null) return;
+
+        switch(u.stat) {
+            case DAMAGE:
+                this.damage += u.effectI;
+            break;
+            case RANGE:
+                this.range += u.effectI;
+            break;
+            case SHOOTING_SPEED:
+                this.reloadDuration *= 1 - u.effectF;
+            break;
+            default:
+                logError("Invalid Stat on Upgrade `" + u.name + "`!");
+            break;
+        }
+
+        money -= u.cost;
+        sellPrice += u.cost * 3/4;
+
+        upgrades[idx] = u.unlocks;
+    }
 
     void shoot() {
         if(target == null) return;
@@ -32,11 +61,15 @@ class Tower extends Structure {
         }
     }
 
+    boolean isTower() {
+        return true;
+    }
+
     ArrayList<Enemy> findEnemiesInRange() {
         ArrayList<Enemy> inRange = new ArrayList<>();
         
         for(Enemy e : enemies) {
-            if(new PVector(position.x, position.y).mult(tileSize).dist(e.pos) <= range * tileSize) {
+            if(new PVector(position.x, position.y).add(0.5, 0.5).mult(tileSize).dist(e.pos) <= (range + 0.5) * tileSize) {
                 inRange.add(e);
             }
         }
@@ -61,7 +94,7 @@ class Tower extends Structure {
                 }
             }
         }
-        if(targeting == Targeting.FURTHERST) {
+        if(targeting == Targeting.FURTHEST) {
             float temp = position.dist(inRange.get(0).pos);
             for(Enemy e : inRange) {
                 float dist = new PVector(position.x, position.y).mult(tileSize).dist(e.pos);

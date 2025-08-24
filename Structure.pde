@@ -5,6 +5,7 @@ class Structure {
     PVectorInt position;
     PImage sprite = null;
     int weight = 1;
+    int cost;
 
     void _update() {
         update();
@@ -33,6 +34,10 @@ class Structure {
     void render() {
         image(sprite, position.x * tileSize, position.y * tileSize, tileSize, tileSize);
         noStroke();
+    }
+
+    boolean isTower() {
+        return false;
     }
 
     Structure(PVectorInt position, PImage sprite) {

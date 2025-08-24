@@ -1,16 +1,12 @@
 static ArrayList<UIObject> uiObjects = new ArrayList<>();
-static HashMap<Integer, ArrayList<UIObject>> priorityUiObjects = new HashMap<>();
-int maxRenderPriority = 0;
-/*
-1 = background (path)
-2 = default (buildings, towers, etc)
-3 = foreground (UI, buttons, etc)
- */
+static ArrayList<UIObject> uiObjectsToRemove = new ArrayList<>();
 
 class UIObject {
-    int renderPriority = 3;
     boolean isActive = true;
     boolean isClickable = true;
+
+    int background = color(0, 0, 0, 0);
+    int outline = color(0, 0, 0, 0);
     
     UIObject parent = null;
 
@@ -38,6 +34,21 @@ class UIObject {
         
         hover = mouseX >= realPosition.x && mouseX < realPosition.x + size.x && mouseY >= realPosition.y && mouseY < realPosition.y + size.y;
 
+        /*
+        if(alpha(background) != 0) {
+            fill(background);
+        }
+
+        if(alpha(outline) != 0) {
+            stroke(outline);
+        }
+
+        rect(realPosition.x, realPosition.y, size.x, size.y);
+        
+        noFill();
+        noStroke();
+        */
+
         render();
     }
 
@@ -57,34 +68,14 @@ class UIObject {
         noStroke();
     }
 
-    void setPriority(int priority) {
-
-        if (priorityUiObjects.containsKey(renderPriority)) {
-            priorityUiObjects.get(renderPriority).remove(this);
-        }
-
-        renderPriority = priority;
-
-        if (!priorityUiObjects.containsKey(priority)) priorityUiObjects.put(priority, new ArrayList<>());
-
-        priorityUiObjects.get(priority).add(this);
-
-        if (priority > maxRenderPriority) {
-            maxRenderPriority = priority;
-        }
-    }
-
     void removeObject() {
         // obs.: não lança exceção se não estiver nas listas
-        uiObjects.remove(this);
-        priorityUiObjects.get(renderPriority).remove(this);
+        uiObjectsToRemove.add(this);
     }
 
     UIObject(PVector position, PVector size) {
         this.position = position;
         this.size = size;
-
-        setPriority(renderPriority);
 
         uiObjects.add(this);
         init();
@@ -95,8 +86,6 @@ class UIObject {
         this.parent = parent;
         this.anchor = anchor;
         this.size = size;
-
-        setPriority(renderPriority);
 
         uiObjects.add(this);
         init();

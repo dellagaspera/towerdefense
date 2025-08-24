@@ -1,12 +1,13 @@
 SpriteManager sprites = new SpriteManager();
+Prices buildCosts = new Prices();
 
 final int tileSize = 48;
 final int gridX = 24;
-final int gridY = 16;
+final int gridY = 17;
 
 final String theme = "grassy";
 
-int nPath = 3;
+int nPath = 5;
 int nSpawner = 1;
 
 int maxPathSize = 2*(gridX+gridY);
@@ -15,15 +16,20 @@ int pathMask[][] = new int[gridX][gridY];
 
 enum StructureType { Cannon, Wall };
 
-int money = 1000;
+int hp = 100;
+int money = 1000000;
 
 boolean buildMode = true;
 StructureType selectedBuild = null;
 
+WaveManager wm = new WaveManager();
+
 int nextEnemy = 1;
 
+final int buildMenuWidth = 256;
+
 void settings() {
-    size(256 + tileSize * gridX, tileSize * gridY, P2D);
+    size(buildMenuWidth + tileSize * gridX, tileSize * gridY, P2D);
 
     // noSmooth();
 }
@@ -34,28 +40,22 @@ void setup() {
     poppins = createFont("assets/poppins.ttf", 128, true);
     
     sprites.loadSprites();
+    wm.readWaves();
     Map.generatePath();
 
-    generateBuildMenu();
+    generateParticlePresets();
+    
+    setBuildCosts();
 
     setupBackground();
 
-    new Text(new PVector(12, 12), new PVector(120, 48), "FPS: ") {
-        void init() {
-            horizontalAlign = LEFT;
-            verticalAlign = TOP;
-        }
-
-        void update() {
-            text = "FPS: " + int(1 / Time.deltaTime);
-        }
-    };
+    setupUI();
 }
 
 void setupBackground() {
     MapClass.Node[][] path = Map.getPath();
     for (int i = 0; i < gridX; i++) {
-        for (int j = 0; j < gridY; j++) {
+        for (int j = 0; j < gridY - 1; j++) {
             if (path[i][j] == null) {
                 pathMask[i][j] = 0;
             } else {
@@ -67,7 +67,7 @@ void setupBackground() {
                 if(i - 1 >= 0 && path[i - 1][j] != null) v += 1 << 0; // left (1)
                 if ((i + 1 < gridX && path[i + 1][j] != null) || i - 1 >= gridX) v += 1 << 1; // right (2)
                 if (j - 1 >= 0 && path[i][j - 1] != null) v += 1 << 2; // top (4)
-                if (j + 1 < gridY && path[i][j + 1] != null) v += 1 << 3; // bottom (8)
+                if (j + 1 < gridY-1 && path[i][j + 1] != null) v += 1 << 3; // bottom (8)
 
                 pathMask[i][j] = v;
             }
@@ -75,44 +75,127 @@ void setupBackground() {
     }
 }
 
+void setupUI() {
+    generateBuildMenu();
+    generateBottomBar();
+
+    /*
+    new Text(new PVector(0, height - 24), new PVector(120, 24)) {
+        void init() {
+            horizontalAlign = LEFT;
+            verticalAlign = BOTTOM;
+
+            textBg = true;
+            bgColor = color(0, 0, 0, 128);
+        }
+
+        void update() {
+            if(int(1 / Time.averageDeltaTime) <= 40)textColor = color(255, 120, 120);
+            else textColor = color(120, 255, 120);
+
+            text = "FPS: " + int(1 / Time.averageDeltaTime);
+        }
+    };
+    */
+}
+
 void drawBackground() {
-    image(sprites.map.get(theme + "/bg"), 0, 0, width, height);
+    image(sprites.png.get(theme + "/bg"), 0, 0, width, height);
     MapClass.Node[][] path = Map.getPath();
     for (int i = 0; i < gridX; i++) {
         for (int j = 0; j < gridY; j++) {
             if(pathMask[i][j] == 0) continue;
-            image(sprites.map.get(theme + "/dirt_" + pathMask[i][j]), i * tileSize, j * tileSize, tileSize, tileSize);
+            image(sprites.png.get(theme + "/dirt_" + pathMask[i][j]), i * tileSize, j * tileSize, tileSize, tileSize);
         }
     }
 }
 
+// void startWave() {
+//     wm.startWave();
+// }
+
 void draw() {
     Time.update();
+    mouseOnPath = Map.getNodeFrom(worldToGridPosition(new PVector(mouseX, mouseY))) != null;
 
     drawBackground();
+
+    drawBuildOverlay();
+    if(inspectMenu != null) drawRange(inspectMenu.selected);
 
     updateAll();
 
     fill(255);
     textSize(16);
     // text("FPS: " + int(1 / Time.deltaTime), 50, 50);
-
-    if(frameCount % 1000 == 0) new Enemy(spawners[(int)random(0, nSpawner)], nextEnemy++);
 }
 
-void build() {
+void drawBuildOverlay() {
     if(selectedBuild == null) return;
+
+    PVector position = new PVector(worldToGridPosition(new PVector(mouseX, mouseY)).x, worldToGridPosition(new PVector(mouseX, mouseY)).y).add(0.5, 0.5).mult(tileSize);
 
     switch (selectedBuild) {
         case Cannon:
-            if (!mouseOnPath) new Tower(worldToGridPosition(new PVector(mouseX, mouseY)), sprites.map.get("cannon"), 1, 2.5f);
+            if (!mouseOnPath) {
+                drawRange(position, 2);
+
+                image(sprites.png.get("cannon_outline"), position.x - tileSize / 2,  position.y - tileSize / 2, tileSize, tileSize);
+            } else {
+                tint(255, 120, 120);
+                image(sprites.png.get("cannon_outline"), position.x - tileSize / 2,  position.y - tileSize / 2, tileSize, tileSize);
+                noTint();
+            }
             break;
         case Wall:
-            if (mouseOnPath) new Wall(worldToGridPosition(new PVector(mouseX, mouseY)));
+            if (mouseOnPath) {
+                image(sprites.png.get("wall_outline"), position.x - tileSize / 2,  position.y - tileSize / 2, tileSize, tileSize);
+            } else {
+                tint(255, 120, 120);
+                image(sprites.png.get("wall_outline"), position.x - tileSize / 2,  position.y - tileSize / 2, tileSize, tileSize);
+                noTint();
+            }
+            break;
+    }
+}
+
+void drawRange(Tower t) {
+    PVector position = gridToWorldPosition(t.position).add(tileSize / 2, tileSize / 2);
+    fill(120, 255, 120, 120);
+    stroke(120, 255, 120);
+    circle(position.x, position.y, (t.range + 0.5) * tileSize * 2);
+    noStroke();
+    noFill();
+}
+
+void drawRange(PVector position, int range) {
+    fill(120, 255, 120, 120);
+    stroke(120, 255, 120);
+    circle(position.x, position.y, (range + 0.5) * tileSize * 2);
+    noStroke();
+    noFill();
+}
+
+boolean build() {
+    if(selectedBuild == null) return false;
+
+    switch (selectedBuild) {
+        case Cannon:
+            if (!mouseOnPath) {
+                new Cannon(worldToGridPosition(new PVector(mouseX, mouseY)));
+                money -= buildCosts.prices.get("Cannon");
+            }
+            break;
+        case Wall:
+            if (mouseOnPath) {
+                new Wall(worldToGridPosition(new PVector(mouseX, mouseY)));
+                money -= buildCosts.prices.get("Wall");
+            }
             break;
     }
 
     selectedBuild = null;
+    return true;
 }
 
 PVectorInt worldToGridPosition(PVector position) {
@@ -124,31 +207,25 @@ PVector gridToWorldPosition(PVectorInt position) {
 }
 
 void generateBuildMenu() {
-    /*
-    Image buildButton = new Image(new PVector(width - 48 - 4, height - 48 - 4), new PVector(48, 48), sprites.map.get("build_button")) {
-        void init() {
-            hoverColor = color(200, 200, 200);
-        }
-
-        void onClick() {
-            buildMode = !buildMode;
-        }
-
-        void update() {
-            if(buildMode) sprite = sprites.map.get("build_button_pressed");
-            else sprite = sprites.map.get("build_button");
-        }
-    };
-    buildButton.setPriority(3);
-    */
-    Image buildPanel = new Image(new PVector(width - 240, 0), new PVector(240, 768), sprites.map.get("build_panel")) {
+    Image buildPanel = new Image(new PVector(width - 240, 0), new PVector(240, 768), sprites.png.get("build_panel")) {
         void update() {
             // isActive = buildMode;
         }
     };
-    buildPanel.setPriority(3);
 
-    Image buildPanelCannon = new Image(buildPanel, new PVector(216, 144), sprites.map.get("blueprint")) {
+    Text title = new Text(buildPanel, new PVector(240, 25), "CONSTRUIR") {
+        void init() {
+            anchor.set(0, 0);
+            center.set(0, 0);
+
+            horizontalAlign = CENTER;
+            verticalAlign = CENTER;
+
+            textColor = color(255);
+        }
+    };
+
+    Image buildPanelCannon = new Image(buildPanel, new PVector(216, 144), sprites.png.get("blueprint_canhao")) {
         void init() {
             anchor.set(0, 0);
             center.set(0, 0);
@@ -161,14 +238,43 @@ void generateBuildMenu() {
 
         void update() {
             isActive = parent.isActive;
+            isClickable = money >= buildCosts.prices.get("Cannon");
 
-            if(selectedBuild == StructureType.Cannon) tintColor = color(120, 255, 120);
-            else tintColor = color(255, 255, 255);
+            if(isClickable) {
+                if(selectedBuild == StructureType.Cannon) tintColor = color(120, 255, 120);
+                else tintColor = color(255, 255, 255);
+            } else {
+                if(selectedBuild == StructureType.Cannon) selectedBuild = null; //só de garantia
+                tintColor = color(255, 120, 120);
+            }
         }
     };
-    buildPanelCannon.setPriority(3);
 
-    Image buildPanelWall = new Image(buildPanel, new PVector(216, 144), sprites.map.get("blueprint")) {
+    Text buildPanelCannonLabel = new Text(buildPanelCannon, new PVector(216, 24)) {
+        void init() {
+            anchor.set(0, 1);
+            center.set(0, 1.25);
+
+            horizontalAlign = CENTER;
+            verticalAlign = CENTER;
+            textColor = color(255, 255, 255);
+            
+            textOutline = true;
+
+            text = buildCosts.prices.get("Cannon") + "$";
+        }
+
+        void update() {
+            if(buildPanelCannon.isClickable) {
+                if(selectedBuild == StructureType.Cannon) outlineColor = color(63 * 120 / 255, 63 * 255 / 255, 63 * 120 / 255);
+                else outlineColor = color(63, 63, 116);
+            } else {
+                outlineColor = color(63 * 255 / 255, 63 * 120 / 255, 116 * 120 / 255);
+            }
+        }
+    };
+
+    Image buildPanelWall = new Image(buildPanel, new PVector(216, 144), sprites.png.get("blueprint_wall")) {
         void init() {
             anchor.set(0, 0);
             center.set(0, 0);
@@ -181,12 +287,129 @@ void generateBuildMenu() {
 
         void update() {
             isActive = parent.isActive;
+            isClickable = money >= buildCosts.prices.get("Wall");
 
-            if(selectedBuild == StructureType.Wall) tintColor = color(120, 255, 120);
-            else tintColor = color(255, 255, 255);
+            if(isClickable) {
+                if(selectedBuild == StructureType.Wall) tintColor = color(120, 255, 120);
+                else tintColor = color(255, 255, 255);
+            } else {
+                if(selectedBuild == StructureType.Wall) selectedBuild = null; //só de garantia
+                tintColor = color(255, 120, 120);
+            }
         }
     };
-    buildPanelWall.setPriority(3);
+
+    Text buildPanelWallLabel = new Text(buildPanelWall, new PVector(216, 24)) {
+        void init() {
+            anchor.set(0, 1);
+            center.set(0, 1.25);
+
+            horizontalAlign = CENTER;
+            verticalAlign = CENTER;
+            textColor = color(255, 255, 255);
+
+            textOutline = true;
+
+            text = buildCosts.prices.get("Wall") + "$";
+        }
+
+        void update() {
+            if(buildPanelWall.isClickable) {
+                if(selectedBuild == StructureType.Wall) outlineColor = color(63 * 120 / 255, 63 * 255 / 255, 63 * 120 / 255);
+                else outlineColor = color(63, 63, 116);
+            } else {
+                outlineColor = color(63 * 255 / 255, 63 * 120 / 255, 116 * 120 / 255);
+            }
+        }
+    };
+}
+
+void generateBottomBar() {
+    Image panel = new Image(new PVector(0, height - 48), new PVector(width, 48), sprites.png.get("bottom_bar"));
+    // money
+    new Image(panel, new PVector(20, 20), sprites.png.get("coin")) {
+        void init() {
+            anchor.set(0, 0);
+            center.set(0, 0);
+
+            position.set(3, 3);
+        }
+    };
+    new Text(panel, new PVector(120, 20)) {
+        void init() {
+            horizontalAlign = LEFT;
+            verticalAlign = CENTER;
+
+            anchor.set(0, 0);
+            center.set(0, 0);
+
+            position.set(3 + 24, 3);
+
+            textColor = color(255);
+        }
+
+        void update() {
+            text = (money + "$");
+        }
+    };
+
+    // hp
+    new Image(panel, new PVector(20, 20), sprites.png.get("heart")) {
+        void init() {
+            anchor.set(0, 0);
+            center.set(0, 0);
+
+            position.set(3, 26);
+        }
+    };
+    new Text(panel, new PVector(120, 20)) {
+        void init() {
+            horizontalAlign = LEFT;
+            verticalAlign = CENTER;
+
+            anchor.set(0, 0);
+            center.set(0, 0);
+
+            position.set(3 + 24, 26);
+
+            textColor = color(255);
+        }
+
+        void update() {
+            text = (str(hp));
+        }
+    };
+
+    Image startRound = new Image(panel, new PVector(128, 40), sprites.png.get("start_round")) {
+
+        void init() {
+            anchor.set(1, 1);
+            center.set(1, 1);
+
+            position.set(-4, -4);
+        }
+
+        void onClick() {
+            wm.startWave();
+        }
+
+        void update() {
+            if(wm.onWave) tintColor = color(255, 120, 120);
+            else tintColor = color(120, 255, 120);
+        }
+    };
+
+    new Text(startRound, new PVector(128, 35), "Iniciar") {
+        void init() {
+            horizontalAlign = CENTER;
+            verticalAlign = CENTER;
+
+            anchor.set(0, 0);
+            center.set(0, 0);
+
+            textColor = color(255);
+        }
+    };
 }
 
 void updateAll() {
@@ -194,6 +417,14 @@ void updateAll() {
         enemies.remove(e);
     }
     deadEnemies = new ArrayList<>();
+
+    if(wm.currentWave == null) wm.onWave = false;
+    if(enemies.size() == 0 && wm.currentWave != null && !wm.currentWave.spawning) wm.onWave = false;
+    
+    for(Particle p : deadParticles) {
+        particles.remove(p);
+    }
+    deadParticles = new ArrayList<>();
 
     for(Structure s : structures) {
         s._update();
@@ -203,10 +434,40 @@ void updateAll() {
         e._update();
     }
     
-    for (int i = 0; i <= maxRenderPriority; i++) {
-        if(!priorityUiObjects.containsKey(i)) continue;
-        for(UIObject o : priorityUiObjects.get(i)) {
-            o._update();
-        }
+    for(Particle p : particles) {
+        p._update();
     }
+    
+    for(UIObject o : uiObjectsToRemove) {
+        uiObjects.remove(o);
+    }
+    uiObjectsToRemove = new ArrayList<>();
+    
+    for(UIObject o : uiObjects) {
+        o._update();
+    }
+
+    for(int i = 0; i < gridX; i++)
+        for(int j = 0; j < gridY; j++)
+            if(Map.getNodeFrom(new PVectorInt(i, j)) != null)text(str(Map.getNodeFrom(new PVectorInt(i, j)).custo), i * tileSize, j * tileSize, tileSize, tileSize);
+}
+
+void generateParticlePresets() {
+    particlePresets.put("Explosion", new Particle(
+        new PImage[] {
+            sprites.png.get("particles/explosion1"),
+            sprites.png.get("particles/explosion2"),
+            sprites.png.get("particles/explosion3"),
+            sprites.png.get("particles/explosion4"),
+            sprites.png.get("particles/explosion5")
+        },
+        new PVector(tileSize, tileSize),
+        0.25
+        ));
+}
+
+void setBuildCosts() {
+    buildCosts.prices.put("Wall", 250);
+    buildCosts.prices.put("Cannon", 500);
+    buildCosts.prices.put("Sand", 500);
 }

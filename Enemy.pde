@@ -15,13 +15,24 @@ class EnemyType {
 }
 
 EnemyType enemyTypes[] = {
-    new EnemyType(0.85f, 255, 80, 80),
-    new EnemyType(0.85f, 80, 180, 255),
-    new EnemyType(0.85f, 80, 180, 80),
-    new EnemyType(0.85f, 255, 180, 80),
-    new EnemyType(1.15f, 255, 255, 255),
-    new EnemyType(1.35f, 80, 80, 80)
+    new EnemyType(0.75f, 255, 80, 80),   // 1
+    new EnemyType(0.80f, 80, 180, 255),  // 2
+    new EnemyType(0.85f, 80, 180, 80),   // 3
+    new EnemyType(0.90f, 255, 180, 80),  // 4
+    new EnemyType(0.95f, 255, 255, 255), // 5
+    new EnemyType(1.00f, 80, 80, 80),    // 6
+    new EnemyType(1.05f, 200, 100, 100), // 7
+    new EnemyType(1.10f, 100, 150, 255), // 8
+    new EnemyType(1.15f, 100, 200, 100), // 9
+    new EnemyType(1.20f, 255, 200, 100), // 10
+    new EnemyType(1.25f, 255, 255, 200), // 11
+    new EnemyType(1.30f, 100, 100, 100), // 12
+    new EnemyType(1.35f, 255, 150, 150), // 13
+    new EnemyType(1.40f, 150, 200, 255), // 14
+    new EnemyType(1.45f, 150, 255, 150), // 15
+    new EnemyType(1.50f, 255, 200, 150)  // 16
 };
+
 class Enemy {
 
     EnemyType type;
@@ -29,60 +40,127 @@ class Enemy {
     PVector pos = new PVector();
     PVectorInt gridPos = new PVectorInt();
 
+    PVector renderPosition = new PVector();
+
     int health = 1;
     int tintColor = color(255);
     float scale = 1;
 
-    float damage = 10; // dano por ataque
+    float damage = 1; // dano por ataque
     private float attackCooldown = 0.5; // Cooldown antes que o inimigo possa atacar novamente
     private float attackTimer = attackCooldown; // contador desde o último ataque
 
-    float moveSpeed = 2;
+    float moveSpeed = 1.5;
     PImage sprite;
 
-    private float bobbing = 0.1;
-    private float bobbingCount = 0;
+    private float bobbingTime = 0;
 
     void _update() {
         attackTimer += Time.deltaTime;
         update();
 
+        
+        bobbingTime = (Time.deltaTime * 6 + bobbingTime) % TWO_PI;
+        float bobbing = -sin(bobbingTime) * tileSize / 8;
+        float floatingHeight = -tileSize / 2;
+        float scaleOffset = (1 - scale) * tileSize / 2;
+
+        renderPosition.set(pos.x + scaleOffset, pos.y + scaleOffset + bobbing + floatingHeight);
+
         render();
     }
 
+/*
     void walk() {
         // verifica se tem um objeto logo em cima. se tiver, tenta quebrar ele
         // (não garanto q funcione)
         if (!attack(gridPos))
             return;
 
-        PVector nextNode = Map.getNextPositionFrom(gridPos);
-        if (nextNode == null) {
+        PVector nextNodePos = Map.getNextPositionFrom(gridPos);
+        if (nextNodePos == null) {
             if (Map.reachedEnd(gridPos)) {
-                println("fim");
+                // println("fim");
+                hp -= health;
+                die();
             }
             return;
         }
 
-        boolean canMove = attack(new PVectorInt(nextNode));
+        boolean canMove;
+        MapClass.Node nextNode = Map.getNodeFrom(nextNodePos);
+        int limite = 22; // duas caixas
+        if(nextNode != null && nextNode.custo > limite) canMove = true;
+        else canMove = attack(new PVectorInt(nextNodePos));
         if (!canMove) {
             // se n pode andar, mas ta longe o suficiente, anda um pouco
-            if (pos.dist(nextNode.copy().mult(tileSize)) > tileSize-10) {
-                pos.add(PVector.sub(nextNode.copy().mult(tileSize), pos).normalize().mult(tileSize * moveSpeed * Time.deltaTime));
+            if (pos.dist(nextNodePos.copy().mult(tileSize)) > tileSize-10) {
+                pos.add(PVector.sub(nextNodePos.copy().mult(tileSize), pos).normalize().mult(tileSize * moveSpeed * Time.deltaTime));
             }
         } else {
             // pode andar
-            if (pos.dist(nextNode.copy().mult(tileSize)) < 1)
-                gridPos = new PVectorInt(nextNode);;
-            pos.add(PVector.sub(nextNode.copy().mult(tileSize), pos).normalize().mult(tileSize * moveSpeed * Time.deltaTime));
+            if (pos.dist(nextNodePos.copy().mult(tileSize)) < 1) { // perto o suficiente
+                gridPos = new PVectorInt(nextNodePos);
+                pos.set(gridPos.x * tileSize, gridPos.y * tileSize); // muda a posição para a posiçao exata da celula, evitando movimento estranho na diagonal 
+            }
+            pos.add(PVector.sub(nextNodePos.copy().mult(tileSize), pos).normalize().mult(tileSize * moveSpeed * Time.deltaTime));
         }
 
-        // if(nextNode.x > gridPos.x) sprite = sprites.map.get("monkey_r");
-        // if(nextNode.y < gridPos.y) sprite = sprites.map.get("monkey_u");
-        // if(nextNode.x < gridPos.x) sprite = sprites.map.get("monkey_l");
-        // if(nextNode.y > gridPos.y) sprite = sprites.map.get("monkey_d");
-        sprite = sprites.map.get("monkey_d");
+        // if(nextNodePos.x > gridPos.x) sprite = sprites.png.get("monkey_r");
+        // if(nextNodePos.y < gridPos.y) sprite = sprites.png.get("monkey_u");
+        // if(nextNodePos.x < gridPos.x) sprite = sprites.png.get("monkey_l");
+        // if(nextNodePos.y > gridPos.y) sprite = sprites.png.get("monkey_d");
+        sprite = sprites.png.get("monkey_d");
     }
+*/
+    void walk() {
+        PVector nextNodePos = Map.getNextPositionFrom(gridPos);
+
+        if (nextNodePos == null) {
+            if (Map.reachedEnd(gridPos)) {
+                hp -= health;
+                die();
+            }
+            return;
+        }
+
+        PVectorInt nextNodeGridPos = new PVectorInt(nextNodePos);
+        Structure target = structuresGrid.get(nextNodeGridPos);
+
+        // Verifique se o próximo nó é um obstáculo
+        // e se o custo dele é maior do que uma rota alternativa.
+        if (target != null) {
+            // Obtenha o custo atual do caminho através do A*
+            MapClass.Node nextNode = Map.getNodeFrom(nextNodeGridPos);
+            float custoParaProximoNo = (nextNode != null) ? nextNode.custoDoInicio + nextNode.custoParaFim : 0;
+            
+            // Custo de desviar: Heurística da distância do inimigo ao fim do caminho mais o custo de uma caixa
+            float custoDesvioEstimado = Map.calcularHeuristica(Map.getNodeFrom(gridPos), Map.getNodeFrom(Map.endPos)) + 11;
+            
+            // Custo de quebrar a caixa: A heurística para o próximo nó mais o custo da caixa
+            float custoQuebraEstimado = Map.calcularHeuristica(Map.getNodeFrom(gridPos), nextNode) + target.weight;
+            
+            // Compara os custos. Se desviar é mais barato, limpe o caminho pré-calculado
+            // para forçar o inimigo a recalcular a rota.
+            if (custoDesvioEstimado < custoQuebraEstimado) {
+                Map.clearPath(); // Limpa o caminho para forçar o recálculo
+            }
+            
+            // Tenta atacar se não for mais barato desviar
+            boolean canAttack = attack(nextNodeGridPos);
+            if (!canAttack) {
+                return;
+            }
+        }
+
+        if (pos.dist(nextNodePos.copy().mult(tileSize)) < 1) {
+            gridPos = nextNodeGridPos;
+            pos.set(gridPos.x * tileSize, gridPos.y * tileSize);
+        } else {
+            pos.add(PVector.sub(nextNodePos.copy().mult(tileSize), pos).normalize().mult(tileSize * moveSpeed * Time.deltaTime));
+        }
+    }
+
 
     boolean attack(PVectorInt targetPosition) {
         Structure target = structuresGrid.get(targetPosition);
@@ -100,7 +178,8 @@ class Enemy {
     }
 
     void hurt(int dmg) {
-        money += dmg + min(0, health - damage);
+        particlePresets.get("Explosion").spawn(renderPosition);
+        money += (dmg + min(0, health - dmg)) * 50;
     
         health -= dmg;
 
@@ -110,7 +189,7 @@ class Enemy {
     }
 
     void die() {
-        enemies.remove(this);
+        deadEnemies.add(this);
     }
 
     void setType() {
@@ -124,18 +203,34 @@ class Enemy {
         tintColor = color(enemyTypes[health - 1].r, enemyTypes[health - 1].g, enemyTypes[health - 1].b);
     }
 
-    void render() {
-        bobbingCount += Time.deltaTime;
-        bobbingCount = bobbingCount % TWO_PI;
-
-        PVector offset = new PVector(pos.x - (tileSize * (1 - scale)) / 2, pos.y - tileSize * (scale - 1) - (tileSize * (1 - scale) / 2));
-
-        image(sprites.map.get("shadow"), pos.x, pos.y, tileSize, tileSize);
+    void render() {        
+        float scaleOffset = (1 - scale) * tileSize / 2;
+        image(sprites.png.get("shadow"), pos.x + scaleOffset, pos.y + scaleOffset, tileSize * scale, tileSize * scale);
 
         tint(tintColor);
-        // image(sprite, offset.x, offset.y + sin(bobbingCount / bobbing) * 3 - 24, tileSize * scale, tileSize * scale);
-        image(sprite, pos.x, pos.y + sin(bobbingCount / bobbing) * 3 - tileSize/2, tileSize, tileSize);
+        image(sprite, renderPosition.x, renderPosition.y, tileSize * scale, tileSize * scale);
         noTint();
+    }
+
+    Enemy(int health) {
+        this.pos.set(gridPos.x * tileSize, gridPos.y * tileSize);
+        this.health = health;
+        
+        setType();
+
+        sprite = sprites.png.get("monkey_d");
+    }
+
+    Enemy(PVectorInt gridPos, Enemy source) {
+        this.gridPos = gridPos;
+        this.pos.set(gridPos.x * tileSize, gridPos.y * tileSize);
+        this.health = source.health;
+
+        setType();
+
+        sprite = sprites.png.get("monkey_d");
+
+        enemies.add(this);
     }
 
     Enemy(PVectorInt gridPos, int health) {
@@ -144,6 +239,8 @@ class Enemy {
         this.health = health;
 
         setType();
+
+        sprite = sprites.png.get("monkey_d");
 
         enemies.add(this);
     }
