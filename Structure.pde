@@ -1,51 +1,20 @@
 static ArrayList<Structure> structures = new ArrayList<>();
-static HashMap<PVectorInt, Structure> structuresGrid = new HashMap<>();
 
 class Structure {
-    PVectorInt position;
-    PImage sprite = null;
-    int weight = 1;
-    int cost;
+    PVector pos = new PVector();
+    int movementCost = 9999;
 
-    void _update() {
-        update();
-
+    void update() {
         render();
     }
 
-    void update() {
-        
-    }
-
-    void _destroy() {
-        structures.remove(this);
-        structuresGrid.remove(position);
-        destroy();
-    }
-
-    void attacked(float damage) {
-
-    }
-
-    void destroy() {
-
-    }
-
     void render() {
-        image(sprite, position.x * tileSize, position.y * tileSize, tileSize, tileSize);
-        noStroke();
+        fill(80, 80, 100);
+        circle(pos.x, pos.y, 24);
     }
 
-    boolean isTower() {
-        return false;
-    }
-
-    Structure(PVectorInt position, PImage sprite) {
-        this.position = position;
-        this.sprite = sprite;
-        Map.setWeight(position, weight);
-
+    Structure(int x, int y) {
+        this.pos = new PVector(x * gridSize, y * gridSize);
         structures.add(this);
-        structuresGrid.put(position, this);
     }
 }

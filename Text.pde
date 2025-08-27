@@ -1,85 +1,27 @@
-PFont poppins;
-
 class Text extends UIObject {
-    String text;
-    PFont font = poppins;
-    int textColor;
-    Integer fontSize;
-    int horizontalAlign;
-    int verticalAlign;
-
-    boolean textOutline;
-    int outlineColor;
-
-    boolean textBg;
-    int bgColor;
-
-    Text(PVector position, PVector size, String text) {
-        super(position, size);
-        this.text = text;
-        if(fontSize == null) fontSize = 16;
-        // init();
-    }
-
-    Text(UIObject parent, PVector size, String text) {
-        super(parent, size);
-        this.text = text;
-        if(fontSize == null) fontSize = 16;
-        // init();
-    }
-
-    Text(PVector position, PVector size) {
-        super(position, size);
-        if(fontSize == null) fontSize = 16;
-        // init();
-    }
-
-    Text(UIObject parent, PVector size) {
-        super(parent, size);
-        if(fontSize == null) fontSize = 16;
-        // init();
-    }
-
-    // Text(String text, PFont font) {
-    //     this.text = text;
-    //     this.font = font;
-    // }
+    String label = "New Text";
+    int col = color(0, 0, 0);
+    int fontSize = 16;
+    int alignX = CENTER;
+    int alignY = CENTER;
 
     void render() {
-        noFill();
-        noStroke();
-        textFont(font);
-        textSize(fontSize);
-        textAlign(horizontalAlign, verticalAlign);
-
-        if(textBg) {
-            fill(bgColor);
-            float w = textWidth(text) + 8;
-            float horizontalOffset = 0;
-
-            switch(horizontalAlign) {
-                case CENTER: horizontalOffset = (size.x - w) / 2; break;
-                case LEFT: horizontalOffset = 0; break;
-                case RIGHT: horizontalOffset = (size.x - w); break;
-            }
-
-            rect(realPosition.x + horizontalOffset, realPosition.y, w, size.y);
-        }
+        if(!active) return;
         
-        if(textOutline) {
-            fill(outlineColor);
-            for(int angle = 0; angle < 360; angle += 15) {
-                text(text, realPosition.x + (cos(radians(angle)) * 3), realPosition.y + (sin(radians(angle)) * 4), size.x, size.y);
-            }
-        }
+        smooth();
+        fill(col);
+        textSize(fontSize);
+        textAlign(alignX, alignY);
+        text(label, pos.x, pos.y, size.x, size.y);
+        noSmooth();
+    }
 
-        fill(textColor);
-        // println("textAlign(" + horizontalAlign + "," + verticalAlign + ");");
-        text(text, int(realPosition.x), int(realPosition.y), size.x, size.y);
-
-        // fill(0, 0, 0, 0);
-        // stroke(255, 255, 0);
-        // rect(realPosition.x, realPosition.y, size.x, size.y);
-        // noStroke();
+    Text(PVector pos, PVector size, String label, int col, int fontSize, int alignX, int alignY) {
+        super(pos, size);
+        this.label = label;
+        this.col = col;
+        this.fontSize = fontSize;
+        this.alignX = alignX;
+        this.alignY = alignY;
     }
 }

@@ -1,134 +1,105 @@
-enum Targeting {STRONGEST, WEAKEST, CLOSEST, FURTHEST};
+static enum TargetSorting {CLOSEST, STRONGEST, WEAKEST};
 
 class Tower extends Structure {
 
-    float reloadDuration = 2;
-    float reloadProgress = 0;
+    float range = gridSize * 4;
+
+    float shootCooldown = 0;
+    float shootDelay = 0.75;
     boolean canShoot = true;
+    float damage = 5;
 
-    int sellPrice;
+    boolean ground = false;
+    boolean aerial = false;
 
-    int damage = 1;
-    int range = 3; // in tiles
-
-    Targeting targeting = Targeting.CLOSEST;
-    Enemy target = null;
-    
-    final Upgrade[] upgrades = new Upgrade[3];
-
-    void upgrade(int idx) {
-        Upgrade u = upgrades[idx];
-        if(u == null) return;
-
-        switch(u.stat) {
-            case DAMAGE:
-                this.damage += u.effectI;
-            break;
-            case RANGE:
-                this.range += u.effectI;
-            break;
-            case SHOOTING_SPEED:
-                this.reloadDuration *= 1 - u.effectF;
-            break;
-            default:
-                logError("Invalid Stat on Upgrade `" + u.name + "`!");
-            break;
-        }
-
-        money -= u.cost;
-        sellPrice += u.cost * 3/4;
-
-        upgrades[idx] = u.unlocks;
-    }
-
-    void shoot() {
-        if(target == null) return;
-        
-        reloadProgress = 0;
-        canShoot = false;
-
-        target.hurt(damage);
-    }
+    TargetSorting targetSort = TargetSorting.CLOSEST;
 
     void update() {
-        setTarget();
+        render();
 
-        if(canShoot && target != null) {
-            shoot();
-        } else {
-            reloadProgress += Time.deltaTime;
-            if(reloadProgress >= reloadDuration) canShoot = true;
+        if(canShoot) {
+            Enemy target = chooseTarget(possibleTargets());
+
+            if(target != null) shoot(target);
+        }
+
+        if(shootCooldown >= shootDelay) {
+            canShoot = true;
+        } else shootCooldown += deltaTime;
+    }
+
+    void render() {        
+        fill(80, 40, 100);
+        if(canShoot)
+            fill(80, 80, 100);
+        circle(pos.x, pos.y, 40);
+    }
+
+    void shoot(Enemy e) {
+        if(canShoot) {
+            canShoot = false;
+            shootCooldown = 0;
+
+            e.health -= damage;
         }
     }
 
-    boolean isTower() {
-        return true;
+    Tower(int x, int y, boolean ground, boolean aerial, float shootDelay, float damage) {
+        super(x, y);
+
+        this.ground = ground;
+        this.aerial = aerial;
+
+        this.shootDelay = shootDelay;
+        this.damage = damage;
     }
 
-    ArrayList<Enemy> findEnemiesInRange() {
-        ArrayList<Enemy> inRange = new ArrayList<>();
+    boolean isInRange(PVector target) {
+        if(pos.dist(target) <= range) return true;
+        return false;
+    }
+
+    Enemy[] possibleTargets() {
+        Enemy[] targets = new Enemy[0];
         
         for(Enemy e : enemies) {
-            if(new PVector(position.x, position.y).add(0.5, 0.5).mult(tileSize).dist(e.pos) <= (range + 0.5) * tileSize) {
-                inRange.add(e);
+            if(isInRange(e.pos) && !(!aerial && e.aerial) && !(!ground && !e.aerial) && e.health > 0) {
+                targets = (Enemy[])append(targets, e);
             }
         }
 
-        return inRange;
+        return targets;
     }
 
-    void setTarget() {
-        ArrayList<Enemy> inRange = findEnemiesInRange();
-        if(inRange.size() == 0) { 
-            target = null; 
-            return; 
-        } else target = inRange.get(0);
+    Enemy chooseTarget(Enemy[] targets) {
+        Enemy target = null;
 
-        if(targeting == Targeting.CLOSEST) {
-            float temp = position.dist(inRange.get(0).pos);
-            for(Enemy e : inRange) {
-                float dist = new PVector(position.x, position.y).mult(tileSize).dist(e.pos);
-                if(dist < temp) {
-                    temp = dist;
+        if(targetSort == TargetSorting.CLOSEST) {
+            float closestDist = 9999999;
+            for(Enemy e : targets) {
+                if(pos.dist(e.pos) <= closestDist) {
                     target = e;
+                    closestDist = pos.dist(e.pos);
+                }
+            }
+        } else if(targetSort == TargetSorting.STRONGEST) {
+            float mostHealth = -1;
+            for(Enemy e : targets) {
+                if(e.health > mostHealth) {
+                    target = e;
+                    mostHealth = e.health;
+                }
+            }
+        } else if(targetSort == TargetSorting.WEAKEST) {
+            float leastHealth = 9999999;
+            for(Enemy e : targets) {
+                if(e.health < leastHealth) {
+                    target = e;
+                    leastHealth = e.health;
                 }
             }
         }
-        if(targeting == Targeting.FURTHEST) {
-            float temp = position.dist(inRange.get(0).pos);
-            for(Enemy e : inRange) {
-                float dist = new PVector(position.x, position.y).mult(tileSize).dist(e.pos);
-                if(dist > temp) {
-                    temp = dist;
-                    target = e;
-                }
-            }
-        }
-        if(targeting == Targeting.WEAKEST) {
-            int temp = inRange.get(0).health;
-            for(Enemy e : inRange) {
-                int hp = e.health;
-                if(hp < temp) {
-                    temp = hp;
-                    target = e;
-                }
-            }
-        }
-        if(targeting == Targeting.STRONGEST) {
-            int temp = inRange.get(0).health;
-            for(Enemy e : inRange) {
-                int hp = e.health;
-                if(hp > temp) {
-                    temp = hp;
-                    target = e;
-                }
-            }
-        }
-    }
 
-    public Tower(PVectorInt position, PImage sprite, int damage, float reloadDuration) {
-        super(position, sprite);
-        this.damage = damage;
-        this.reloadDuration = reloadDuration;
+        return target;
     }
 }
