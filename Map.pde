@@ -49,8 +49,9 @@ private class MapClass {
         if (node != null) {
             node.custo = weight;
             // atualiza o caminho
-            // calculateBestPath(getNodeFrom(startPos), getNodeFrom(endPos));
+            calculateBestPath(getNodeFrom(spawners[0]), getNodeFrom(endPos));
         } else {
+            logError("Node on position " + pos.toString() + " is null!");
             //println("null!");
         }
     }

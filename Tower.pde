@@ -1,105 +1,166 @@
-static enum TargetSorting {CLOSEST, STRONGEST, WEAKEST};
+enum Targeting {STRONGEST, WEAKEST, CLOSEST, FURTHEST};
 
 class Tower extends Structure {
 
-    float range = gridSize * 4;
-
-    float shootCooldown = 0;
-    float shootDelay = 0.75;
+    float reloadDuration = 2;
+    float reloadProgress = 0;
     boolean canShoot = true;
-    float damage = 5;
 
-    boolean ground = false;
-    boolean aerial = false;
+    int sellPrice;
 
-    TargetSorting targetSort = TargetSorting.CLOSEST;
+    int damage = 1;
+    int range = 3; // in tiles
+
+    boolean aoe;
+    int aoeDamage;
+    float aoeRange;
+
+    Targeting targeting = Targeting.CLOSEST;
+    Enemy target = null;
+    
+    final Upgrade[] upgrades = new Upgrade[3];
+    final boolean[] upgradedPaths = new boolean[3];
+
+    void upgrade(int idx) {
+        Upgrade u = upgrades[idx];
+        upgradedPaths[idx] = true;
+        if(u == null) return;
+
+        switch(u.stat) {
+            case DAMAGE:
+                this.damage += u.effectI;
+            break;
+            case RANGE:
+                this.range += u.effectI;
+            break;
+            case SHOOTING_SPEED:
+                this.reloadDuration *= 1 - u.effectF;
+            break;
+            default:
+                logError("Invalid Stat on Upgrade `" + u.name + "`!");
+            break;
+        }
+
+        money -= u.cost;
+        sellPrice += u.cost * 3/4;
+
+        upgrades[idx] = u.unlocks;
+    }
+
+    boolean isValidUpgradePath(int idx) {
+        int nPaths = 0;
+        boolean isUpgraded = false;
+        for(int i = 0; i < 3; i++) if(upgradedPaths[i]) {
+            if(i == idx) isUpgraded = true;
+            nPaths++;
+        }
+        if(nPaths >= 2 && !isUpgraded) return false;
+        return true;
+    }
+
+    void shoot() {
+        if(target == null) return;
+        
+        reloadProgress = 0;
+        canShoot = false;
+
+        target.hurt(damage);
+        if(aoe) {
+            
+        }
+    }
 
     void update() {
-        render();
+        setTarget();
 
-        if(canShoot) {
-            Enemy target = chooseTarget(possibleTargets());
-
-            if(target != null) shoot(target);
-        }
-
-        if(shootCooldown >= shootDelay) {
-            canShoot = true;
-        } else shootCooldown += deltaTime;
-    }
-
-    void render() {        
-        fill(80, 40, 100);
-        if(canShoot)
-            fill(80, 80, 100);
-        circle(pos.x, pos.y, 40);
-    }
-
-    void shoot(Enemy e) {
-        if(canShoot) {
-            canShoot = false;
-            shootCooldown = 0;
-
-            e.health -= damage;
+        if(canShoot && target != null) {
+            shoot();
+        } else {
+            reloadProgress += Time.deltaTime;
+            if(reloadProgress >= reloadDuration) canShoot = true;
         }
     }
 
-    Tower(int x, int y, boolean ground, boolean aerial, float shootDelay, float damage) {
-        super(x, y);
-
-        this.ground = ground;
-        this.aerial = aerial;
-
-        this.shootDelay = shootDelay;
-        this.damage = damage;
+    boolean isTower() {
+        return true;
     }
 
-    boolean isInRange(PVector target) {
-        if(pos.dist(target) <= range) return true;
-        return false;
-    }
-
-    Enemy[] possibleTargets() {
-        Enemy[] targets = new Enemy[0];
+    ArrayList<Enemy> findEnemiesInRange() {
+        ArrayList<Enemy> inRange = new ArrayList<>();
         
         for(Enemy e : enemies) {
-            if(isInRange(e.pos) && !(!aerial && e.aerial) && !(!ground && !e.aerial) && e.health > 0) {
-                targets = (Enemy[])append(targets, e);
+            if(new PVector(position.x, position.y).mult(tileSize).dist(e.pos) <= (range + 0.5) * tileSize) {
+                inRange.add(e);
             }
         }
 
-        return targets;
+        return inRange;
     }
 
-    Enemy chooseTarget(Enemy[] targets) {
-        Enemy target = null;
+    void setTarget() {
+        ArrayList<Enemy> inRange = findEnemiesInRange();
+        if(inRange.size() == 0) { 
+            target = null; 
+            return; 
+        } else target = inRange.get(0);
 
-        if(targetSort == TargetSorting.CLOSEST) {
-            float closestDist = 9999999;
-            for(Enemy e : targets) {
-                if(pos.dist(e.pos) <= closestDist) {
+        if(targeting == Targeting.CLOSEST) {
+            float temp = position.dist(inRange.get(0).pos);
+            for(Enemy e : inRange) {
+                float dist = new PVector(position.x, position.y).mult(tileSize).dist(e.pos);
+                if(dist < temp) {
+                    temp = dist;
                     target = e;
-                    closestDist = pos.dist(e.pos);
-                }
-            }
-        } else if(targetSort == TargetSorting.STRONGEST) {
-            float mostHealth = -1;
-            for(Enemy e : targets) {
-                if(e.health > mostHealth) {
-                    target = e;
-                    mostHealth = e.health;
-                }
-            }
-        } else if(targetSort == TargetSorting.WEAKEST) {
-            float leastHealth = 9999999;
-            for(Enemy e : targets) {
-                if(e.health < leastHealth) {
-                    target = e;
-                    leastHealth = e.health;
                 }
             }
         }
+        if(targeting == Targeting.FURTHEST) {
+            float temp = position.dist(inRange.get(0).pos);
+            for(Enemy e : inRange) {
+                float dist = new PVector(position.x, position.y).mult(tileSize).dist(e.pos);
+                if(dist > temp) {
+                    temp = dist;
+                    target = e;
+                }
+            }
+        }
+        if(targeting == Targeting.WEAKEST) {
+            int temp = inRange.get(0).health;
+            for(Enemy e : inRange) {
+                int hp = e.health;
+                if(hp < temp) {
+                    temp = hp;
+                    target = e;
+                }
+            }
+        }
+        if(targeting == Targeting.STRONGEST) {
+            int temp = inRange.get(0).health;
+            for(Enemy e : inRange) {
+                int hp = e.health;
+                if(hp > temp) {
+                    temp = hp;
+                    target = e;
+                }
+            }
+        }
+    }
 
-        return target;
+    public Tower(PVectorInt position, PImage sprite, int damage, float reloadDuration) {
+        super(position, sprite);
+        this.damage = damage;
+        this.reloadDuration = reloadDuration;
+
+        aoe = false;
+    }
+
+    public Tower(PVectorInt position, PImage sprite, int damage, float reloadDuration, int aoeDamage, float aoeRange) {
+        super(position, sprite);
+        this.damage = damage;
+        this.reloadDuration = reloadDuration;
+
+        aoe = true;
+        this.aoeDamage = aoeDamage;
+        this.aoeRange = aoeRange;
     }
 }

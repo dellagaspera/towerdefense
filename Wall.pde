@@ -5,7 +5,7 @@ class Wall extends Structure {
     // Text healthText;
 
     public Wall(PVectorInt position) {
-        super(position, sprites.png.get("wall1"));
+        super(position, sprites.png.get("wall1"), true);
         Map.setWeight(position, weight + (int)health);
 
         // healthText = new Text(

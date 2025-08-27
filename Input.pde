@@ -1,10 +1,13 @@
 boolean mouseOnPath = false;
-void mouseReleased() {
+void mousePressed() {
+    if(mouseButton == RIGHT) {
+        selectedBuild = null;
+    }
     if(mouseButton != LEFT) return;
     boolean clickedUi = false;
     for(UIObject o : uiObjects) {
         if(o.hover && o.isActive && o.isClickable) {
-            o.onClick();
+            o._onClick();
             clickedUi = true;
         }
     }
@@ -24,4 +27,17 @@ void mouseReleased() {
     uiObjects.remove((UIObject)inspectMenu);
     clearInspectMenu();
     inspectMenu = null;
+}
+
+void mouseReleased() {
+    if(mouseButton == RIGHT) {
+        selectedBuild = null;
+    }
+    if(mouseButton != LEFT) return;
+    
+    for(UIObject o : uiObjects) {
+        if(o.hover && o.isActive && o.isClickable) {
+            o._onRelease();
+        }
+    }
 }

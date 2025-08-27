@@ -1,4 +1,5 @@
 SpriteManager sprites = new SpriteManager();
+SoundManager sounds = new SoundManager(this);
 Prices buildCosts = new Prices();
 
 final int tileSize = 48;
@@ -14,10 +15,10 @@ int maxPathSize = 2*(gridX+gridY);
 
 int pathMask[][] = new int[gridX][gridY];
 
-enum StructureType { Cannon, Wall };
+enum StructureType { Cannon, Wall, Sand };
 
 int hp = 100;
-int money = 1000000;
+int money = 1000;
 
 boolean buildMode = true;
 StructureType selectedBuild = null;
@@ -35,11 +36,11 @@ void settings() {
 }
 
 void setup() {
-    frameRate(160);
-
-    poppins = createFont("assets/poppins.ttf", 128, true);
+    poppins16 = createFont("assets/fonts/poppins.ttf", 16, true);
+    poppins12 = createFont("assets/fonts/poppins.ttf", 12, true);
     
     sprites.loadSprites();
+    sounds.loadSounds();
     wm.readWaves();
     Map.generatePath();
 
@@ -192,6 +193,12 @@ boolean build() {
                 money -= buildCosts.prices.get("Wall");
             }
             break;
+        case Sand:
+            if (mouseOnPath) {
+                new Sand(worldToGridPosition(new PVector(mouseX, mouseY)));
+                money -= buildCosts.prices.get("Sand");
+            }
+            break;
     }
 
     selectedBuild = null;
@@ -316,6 +323,55 @@ void generateBuildMenu() {
         void update() {
             if(buildPanelWall.isClickable) {
                 if(selectedBuild == StructureType.Wall) outlineColor = color(63 * 120 / 255, 63 * 255 / 255, 63 * 120 / 255);
+                else outlineColor = color(63, 63, 116);
+            } else {
+                outlineColor = color(63 * 255 / 255, 63 * 120 / 255, 116 * 120 / 255);
+            }
+        }
+    };
+
+    Image buildPanelSand = new Image(buildPanel, new PVector(216, 144), sprites.png.get("blueprint_sand")) {
+        void init() {
+            anchor.set(0, 0);
+            center.set(0, 0);
+            position.set(12, 36 + 288);
+        }
+        
+        void onClick() {
+            selectedBuild = StructureType.Sand;
+        }
+
+        void update() {
+            isActive = parent.isActive;
+            isClickable = money >= buildCosts.prices.get("Sand");
+
+            if(isClickable) {
+                if(selectedBuild == StructureType.Sand) tintColor = color(120, 255, 120);
+                else tintColor = color(255, 255, 255);
+            } else {
+                if(selectedBuild == StructureType.Sand) selectedBuild = null; //só de garantia
+                tintColor = color(255, 120, 120);
+            }
+        }
+    };
+
+    Text buildPanelSandLabel = new Text(buildPanelSand, new PVector(216, 24)) {
+        void init() {
+            anchor.set(0, 1);
+            center.set(0, 1.25);
+
+            horizontalAlign = CENTER;
+            verticalAlign = CENTER;
+            textColor = color(255, 255, 255);
+
+            textOutline = true;
+
+            text = buildCosts.prices.get("Sand") + "$";
+        }
+
+        void update() {
+            if(buildPanelSand.isClickable) {
+                if(selectedBuild == StructureType.Sand) outlineColor = color(63 * 120 / 255, 63 * 255 / 255, 63 * 120 / 255);
                 else outlineColor = color(63, 63, 116);
             } else {
                 outlineColor = color(63 * 255 / 255, 63 * 120 / 255, 116 * 120 / 255);
@@ -447,9 +503,9 @@ void updateAll() {
         o._update();
     }
 
-    for(int i = 0; i < gridX; i++)
-        for(int j = 0; j < gridY; j++)
-            if(Map.getNodeFrom(new PVectorInt(i, j)) != null)text(str(Map.getNodeFrom(new PVectorInt(i, j)).custo), i * tileSize, j * tileSize, tileSize, tileSize);
+    // for(int i = 0; i < gridX; i++)
+    //     for(int j = 0; j < gridY; j++)
+    //         if(Map.getNodeFrom(new PVectorInt(i, j)) != null)text(str(Map.getNodeFrom(new PVectorInt(i, j)).custo), i * tileSize, j * tileSize, tileSize, tileSize);
 }
 
 void generateParticlePresets() {
@@ -469,5 +525,5 @@ void generateParticlePresets() {
 void setBuildCosts() {
     buildCosts.prices.put("Wall", 250);
     buildCosts.prices.put("Cannon", 500);
-    buildCosts.prices.put("Sand", 500);
+    buildCosts.prices.put("Sand", 350);
 }

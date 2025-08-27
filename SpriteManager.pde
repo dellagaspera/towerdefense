@@ -4,7 +4,7 @@ class SpriteManager {
     public HashMap<String, PImage> png = new HashMap<>();
 
     void loadSprites() {
-        File folder = new File(sketchPath("assets")); 
+        File folder = new File(sketchPath("assets/sprites")); 
         File[] files = folder.listFiles();
 
         if(files != null) {
@@ -13,8 +13,8 @@ class SpriteManager {
                     loadSpritesSubFoder(f.getName());
                 } else if (f.isFile() && f.getName().toLowerCase().endsWith(".png")) {
                     String name = f.getName().substring(0, f.getName().lastIndexOf("."));
-                    logInfo("LOADING ASSET: `assets/" + f.getName() + "`");
-                    png.put(name, loadImage("assets/" + f.getName()));
+                    logInfo("LOADING ASSET: `assets/sprites/" + f.getName() + "`");
+                    png.put(name, loadImage("assets/sprites/" + f.getName()));
                 }
             }
         } else {
@@ -23,7 +23,7 @@ class SpriteManager {
     }
 
     void loadSpritesSubFoder(String folderName) {
-        String path = "assets/" + folderName;
+        String path = "assets/sprites/" + folderName;
         File folder = new File(sketchPath(path)); 
         File[] files = folder.listFiles();
 
