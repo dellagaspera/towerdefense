@@ -1,0 +1,19 @@
+{    
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run",
+            "type": "shell",
+            "command": "\"C:\\Users\\gabri\\OneDrive\\Documentos\\Programs\\processing\\processing-java.exe\"",
+            "args": [
+                "--sketch=\"${fileDirname}\"",
+                "--run"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}
