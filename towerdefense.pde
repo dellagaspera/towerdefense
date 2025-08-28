@@ -18,7 +18,7 @@ void setup() {
     colorMode(HSB, 360, 100, 100);
     lastMillis = millis();
     noStroke();
-    noSmooth(); 
+    // noSmooth(); 
     size(64 * 24, 64 * 12);
 
     strucuresMap = new HashMap<>();
@@ -33,6 +33,12 @@ void setup() {
     };
 
     new InspectMenu();
+
+    new ToggleButton(new PVector(width - 64 - 2, height - 64 - 2), new PVector(64, 64), build_button1, build_button2) {
+        void onClick() {
+            println("Open menu");
+        }
+    };
 }
 
 void draw() {
@@ -118,6 +124,8 @@ PImage selection1 = null;
 PImage selection2 = null;
 PImage inspect_selection1 = null;
 PImage inspect_selection2 = null;
+PImage build_button1 = null;
+PImage build_button2 = null;
 void loadSprites() {
     cannon1 = loadImage("sprites/cannon1.png");
     cannon2 = loadImage("sprites/cannon2.png");
@@ -125,4 +133,6 @@ void loadSprites() {
     selection2 = loadImage("sprites/selection2.png");
     inspect_selection1 = loadImage("sprites/inspect_selection1.png");
     inspect_selection2 = loadImage("sprites/inspect_selection2.png");
+    build_button1 = loadImage("sprites/build_button1.png");
+    build_button2 = loadImage("sprites/build_button2.png");
 }

@@ -1,20 +1,71 @@
 static ArrayList<Structure> structures = new ArrayList<>();
+static HashMap<PVectorInt, Structure> structuresGrid = new HashMap<>();
 
 class Structure {
-    PVector pos = new PVector();
-    int movementCost = 9999;
+    PVectorInt position;
+    PImage sprite = null;
+    int weight = 1;
+    int cost;
 
-    void update() {
+    boolean canBeAttacked;
+    boolean isPath;
+
+    void _update() {
+        update();
+
         render();
     }
 
-    void render() {
-        fill(80, 80, 100);
-        circle(pos.x, pos.y, 24);
+    void update() {
+        
     }
 
-    Structure(int x, int y) {
-        this.pos = new PVector(x * gridSize, y * gridSize);
+    void _destroy() {
+        structures.remove(this);
+        structuresGrid.remove(position);
+
+        sounds.playSound("structure_destroy");
+        destroy();
+    }
+
+    void attacked(float damage) {
+
+    }
+
+    void destroy() {
+
+    }
+
+    void render() {
+        image(sprite, position.x * tileSize, position.y * tileSize, tileSize, tileSize);
+        noStroke();
+    }
+
+    boolean isTower() {
+        return false;
+    }
+
+    Structure(PVectorInt position, PImage sprite) {
+        this.position = position;
+        this.sprite = sprite;
+        canBeAttacked = false;
+        isPath = false;
+
+        sounds.playSound("structure_build");
+
         structures.add(this);
+        structuresGrid.put(position, this);
+    }
+
+    Structure(PVectorInt position, PImage sprite, boolean canBeAttacked) {
+        this.position = position;
+        this.sprite = sprite;
+        this.canBeAttacked = canBeAttacked;
+        isPath = true;
+
+        sounds.playSound("structure_build");
+
+        structures.add(this);
+        structuresGrid.put(position, this);
     }
 }

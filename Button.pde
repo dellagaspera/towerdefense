@@ -1,5 +1,8 @@
 class Button extends Image {
     Text buttonText = null;
+    PImage hoverSprite = null;
+
+    boolean hover = false;
 
     void onClick() {
 
@@ -7,10 +10,23 @@ class Button extends Image {
 
     void update() {
         if(!active) return;
-        render();
 
-        if(active && mousePressed && mouseX >= pos.x && mouseX < pos.x + size.x && mouseY >= pos.y && mouseY < pos.y + size.y) {
-            onClick();
+        if(mouseX >= pos.x && mouseX < pos.x + size.x && mouseY >= pos.y && mouseY < pos.y + size.y) {
+            hover = true;
+            if(mousePressed) onClick();
+        } else hover = false;
+        
+        render();
+    }
+
+    void render() {
+        if(sprite != null) {
+            if(!hover) image(sprite, pos.x, pos.y, size.x, size.y);
+            else image(hoverSprite, pos.x, pos.y, size.x, size.y);
+        }
+        else {
+            fill(col);
+            rect(pos.x, pos.y, size.x, size.y);
         }
     }
 
@@ -23,12 +39,14 @@ class Button extends Image {
         if(buttonText != null) buttonText.deactivate();
     }
 
-    Button(PVector pos, PVector size, PImage sprite) {
+    Button(PVector pos, PVector size, PImage sprite, PImage hoverSprite) {
         super(pos, size, sprite);
+        this.hoverSprite = hoverSprite;
     }
 
-    Button(PVector pos, PVector size, PImage sprite, String label, int col, int fontSize) {
+    Button(PVector pos, PVector size, PImage sprite, PImage hoverSprite, String label, int col, int fontSize) {
         super(pos, size, sprite);
+        this.hoverSprite = hoverSprite;
         buttonText = new Text(pos, size, label, col, fontSize, CENTER, CENTER);
     }
 

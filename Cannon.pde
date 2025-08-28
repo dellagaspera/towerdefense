@@ -1,28 +1,29 @@
 class Cannon extends Tower {
-    float range = gridSize * 4;
 
-    void render() {       
-        if(canShoot) 
-            image(cannon2, pos.x, pos.y);
-        else
-            image(cannon1, pos.x, pos.y);
-    }
+    public Cannon(PVectorInt position) {
+        super(position, sprites.png.get("cannon"), 1, 2.5f);
+        this.damage = damage;
+        this.reloadDuration = reloadDuration;
+        this.range = 2;
 
-    void shoot(Enemy e) {
-        if(canShoot) {
-            canShoot = false;
-            shootCooldown = 0;
+        sellPrice = buildCosts.prices.get("Cannon") * 3/4;
 
-            e.health -= damage;
-        }
-    }
+        upgrades[0] = 
+            new Upgrade(300, "Tiro Reforçado", Stat.DAMAGE, 1,
+            new Upgrade(600, "Chumbo", Stat.DAMAGE, 1,
+            new Upgrade(1250, "Bomba", Stat.AOE_DAMAGE, 1, 0.5)));
+        upgrades[1] = 
+            new Upgrade(400, "Aceleração", Stat.SHOOTING_SPEED, 0.2,
+            new Upgrade(800, "Turbo", Stat.SHOOTING_SPEED, 0.3,
+            new Upgrade(1500, "Metralhadora", Stat.SHOOTING_SPEED, 0.5)));
+        upgrades[2] = 
+            new Upgrade(500, "Luneta", Stat.RANGE, 1,
+            new Upgrade(750, "Mira Laser", Stat.RANGE, 1,
+            new Upgrade(1500, "Visão Noturna", Stat.RANGE, 2)));
 
-    Cannon(int x, int y) {
-        super(x, y, true, false, 1.75, 3);
-    }
-
-    boolean isInRange(PVector target) {
-        if(pos.dist(target) <= range) return true;
-        return false;
+        for(int i = 1; i <= 3; i++)    
+            for(int j = 1; j <= 3; j++) {
+                this.upgradeSprites[i - 1][j - 1] = sprites.png.get("cannon" + i + "_" + j);
+            }
     }
 }
