@@ -8,7 +8,7 @@ PVectorInt spawners[] = new PVectorInt[nSpawner];
 private class MapClass {
 
     // private final PVector startPos = new PVector(gridX-1, (gridY-1)/2);
-    private final PVector endPos = new PVector(0, (gridY-1)/2);
+    public final PVector endPos = new PVector(1, (gridY-1)/2);
 
     private PVector[] directions = {new PVector(1, 0), new PVector(-1, 0), new PVector(0, 1), new PVector(0, -1)};
 

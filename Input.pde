@@ -41,3 +41,11 @@ void mouseReleased() {
         }
     }
 }
+
+void keyPressed() {
+    switch(key) {
+        case '1': selectedBuild = StructureType.Cannon; break;
+        case '2': selectedBuild = StructureType.Wall; break;
+        case '3': selectedBuild = StructureType.Sand; break;
+    }
+}

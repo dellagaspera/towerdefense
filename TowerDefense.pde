@@ -66,7 +66,7 @@ void setupBackground() {
 
                 int v = 0;
                 if(i - 1 >= 0 && path[i - 1][j] != null) v += 1 << 0; // left (1)
-                if ((i + 1 < gridX && path[i + 1][j] != null) || i - 1 >= gridX) v += 1 << 1; // right (2)
+                if ((i + 1 < gridX && path[i + 1][j] != null) || i + 1 >= gridX) v += 1 << 1; // right (2)
                 if (j - 1 >= 0 && path[i][j - 1] != null) v += 1 << 2; // top (4)
                 if (j + 1 < gridY-1 && path[i][j + 1] != null) v += 1 << 3; // bottom (8)
 
@@ -111,6 +111,10 @@ void drawBackground() {
     }
 }
 
+void drawCore() {
+    image(sprites.png.get("core"), Map.endPos.x * tileSize, Map.endPos.y * tileSize, tileSize, tileSize);
+}
+
 // void startWave() {
 //     wm.startWave();
 // }
@@ -120,6 +124,7 @@ void draw() {
     mouseOnPath = Map.getNodeFrom(worldToGridPosition(new PVector(mouseX, mouseY))) != null;
 
     drawBackground();
+    drawCore();
 
     drawBuildOverlay();
     if(inspectMenu != null) drawRange(inspectMenu.selected);
@@ -134,11 +139,12 @@ void draw() {
 void drawBuildOverlay() {
     if(selectedBuild == null) return;
 
-    PVector position = new PVector(worldToGridPosition(new PVector(mouseX, mouseY)).x, worldToGridPosition(new PVector(mouseX, mouseY)).y).add(0.5, 0.5).mult(tileSize);
+    PVectorInt gridPosition = new PVectorInt(new PVector(mouseX, mouseY).mult(1.0/tileSize));
+    PVector position = new PVector(gridPosition.x, gridPosition.y).add(0.5, 0.5).mult(tileSize);
 
     switch (selectedBuild) {
         case Cannon:
-            if (!mouseOnPath) {
+            if (!mouseOnPath && isValidBuildPosition(gridPosition)) {
                 drawRange(position, 2);
 
                 image(sprites.png.get("cannon_outline"), position.x - tileSize / 2,  position.y - tileSize / 2, tileSize, tileSize);
@@ -147,16 +153,25 @@ void drawBuildOverlay() {
                 image(sprites.png.get("cannon_outline"), position.x - tileSize / 2,  position.y - tileSize / 2, tileSize, tileSize);
                 noTint();
             }
-            break;
+        break;
         case Wall:
-            if (mouseOnPath) {
+            if (mouseOnPath && isValidBuildPosition(gridPosition)) {
                 image(sprites.png.get("wall_outline"), position.x - tileSize / 2,  position.y - tileSize / 2, tileSize, tileSize);
             } else {
                 tint(255, 120, 120);
                 image(sprites.png.get("wall_outline"), position.x - tileSize / 2,  position.y - tileSize / 2, tileSize, tileSize);
                 noTint();
             }
-            break;
+        break;
+        case Sand:
+            if (mouseOnPath && isValidBuildPosition(gridPosition)) {
+                image(sprites.png.get("sand_outline"), position.x - tileSize / 2,  position.y - tileSize / 2, tileSize, tileSize);
+            } else {
+                tint(255, 120, 120);
+                image(sprites.png.get("sand_outline"), position.x - tileSize / 2,  position.y - tileSize / 2, tileSize, tileSize);
+                noTint();
+            }
+        break;
     }
 }
 
@@ -177,25 +192,36 @@ void drawRange(PVector position, int range) {
     noFill();
 }
 
+boolean isValidBuildPosition(PVectorInt gridPosition) {
+    if(structuresGrid.get(gridPosition) != null) return false;
+    if(gridPosition.x < 0 || gridPosition.x >= gridX || gridPosition.y < 0 || gridPosition.y >= gridY) return false;
+
+    return true;
+}
+
 boolean build() {
     if(selectedBuild == null) return false;
+
+    PVectorInt gridPosition = worldToGridPosition(new PVector(mouseX, mouseY));
+
+    if(!isValidBuildPosition(gridPosition)) return false;
 
     switch (selectedBuild) {
         case Cannon:
             if (!mouseOnPath) {
-                new Cannon(worldToGridPosition(new PVector(mouseX, mouseY)));
+                new Cannon(gridPosition);
                 money -= buildCosts.prices.get("Cannon");
             }
             break;
         case Wall:
             if (mouseOnPath) {
-                new Wall(worldToGridPosition(new PVector(mouseX, mouseY)));
+                new Wall(gridPosition);
                 money -= buildCosts.prices.get("Wall");
             }
             break;
         case Sand:
             if (mouseOnPath) {
-                new Sand(worldToGridPosition(new PVector(mouseX, mouseY)));
+                new Sand(gridPosition);
                 money -= buildCosts.prices.get("Sand");
             }
             break;
@@ -523,7 +549,7 @@ void generateParticlePresets() {
 }
 
 void setBuildCosts() {
-    buildCosts.prices.put("Wall", 250);
+    buildCosts.prices.put("Wall", 275);
     buildCosts.prices.put("Cannon", 500);
-    buildCosts.prices.put("Sand", 350);
+    buildCosts.prices.put("Sand", 375);
 }

@@ -11,7 +11,7 @@ class Cannon extends Tower {
         upgrades[0] = 
             new Upgrade(300, "Tiro Reforçado", Stat.DAMAGE, 1,
             new Upgrade(600, "Chumbo", Stat.DAMAGE, 1,
-            new Upgrade(750, "Tiro de Titânio", Stat.DAMAGE, 1)));
+            new Upgrade(1250, "Bomba", Stat.AOE_DAMAGE, 1, 0.5)));
         upgrades[1] = 
             new Upgrade(400, "Aceleração", Stat.SHOOTING_SPEED, 0.2,
             new Upgrade(800, "Turbo", Stat.SHOOTING_SPEED, 0.3,
@@ -20,5 +20,10 @@ class Cannon extends Tower {
             new Upgrade(500, "Luneta", Stat.RANGE, 1,
             new Upgrade(750, "Mira Laser", Stat.RANGE, 1,
             new Upgrade(1500, "Visão Noturna", Stat.RANGE, 2)));
+
+        for(int i = 1; i <= 3; i++)    
+            for(int j = 1; j <= 3; j++) {
+                this.upgradeSprites[i - 1][j - 1] = sprites.png.get("cannon" + i + "_" + j);
+            }
     }
 }

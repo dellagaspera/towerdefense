@@ -1,7 +1,9 @@
 enum Targeting {STRONGEST, WEAKEST, CLOSEST, FURTHEST};
 
-class Tower extends Structure {
+final int maxUpgradePaths = 20;
+final int maxUpgradeCount = 40;
 
+class Tower extends Structure {
     float reloadDuration = 2;
     float reloadProgress = 0;
     boolean canShoot = true;
@@ -20,6 +22,9 @@ class Tower extends Structure {
     
     final Upgrade[] upgrades = new Upgrade[3];
     final boolean[] upgradedPaths = new boolean[3];
+    final int[] upgradeCounts = new int[3];
+    final PImage[][] upgradeSprites = new PImage[3][3];
+    int upgradeCount = 0;
 
     void upgrade(int idx) {
         Upgrade u = upgrades[idx];
@@ -36,25 +41,36 @@ class Tower extends Structure {
             case SHOOTING_SPEED:
                 this.reloadDuration *= 1 - u.effectF;
             break;
+            case AOE_DAMAGE:
+                this.aoe = true;
+                this.aoeDamage += u.effectI;
+                this.aoeRange += u.effectF;
+            break;
             default:
                 logError("Invalid Stat on Upgrade `" + u.name + "`!");
             break;
         }
 
+        upgradeCount++;
+        upgradeCounts[idx]++;
+
         money -= u.cost;
         sellPrice += u.cost * 3/4;
+
+        sounds.playSound("structure_build");
 
         upgrades[idx] = u.unlocks;
     }
 
-    boolean isValidUpgradePath(int idx) {
+    boolean isValidUpgrade(int idx) {
+        if(upgradeCount >= maxUpgradeCount) return false;
         int nPaths = 0;
         boolean isUpgraded = false;
         for(int i = 0; i < 3; i++) if(upgradedPaths[i]) {
             if(i == idx) isUpgraded = true;
             nPaths++;
         }
-        if(nPaths >= 2 && !isUpgraded) return false;
+        if(nPaths >= maxUpgradePaths && !isUpgraded) return false;
         return true;
     }
 
@@ -66,7 +82,11 @@ class Tower extends Structure {
 
         target.hurt(damage);
         if(aoe) {
-            
+            ArrayList<Enemy> inRange = findEnemiesInRange(target.pos, aoeRange);
+
+            for(Enemy e : inRange) {
+                e.hurt(aoeDamage);
+            }
         }
     }
 
@@ -85,11 +105,32 @@ class Tower extends Structure {
         return true;
     }
 
+    void render() {
+        image(sprite, position.x * tileSize, position.y * tileSize, tileSize, tileSize);
+
+        for(int i = 0; i < 3; i++) {
+            if(upgradeCounts[i] > 0 && upgradeSprites[i][upgradeCounts[i] - 1] != null) 
+                image(upgradeSprites[i][upgradeCounts[i] - 1], position.x * tileSize, position.y * tileSize, tileSize, tileSize);
+        }
+    }
+
     ArrayList<Enemy> findEnemiesInRange() {
         ArrayList<Enemy> inRange = new ArrayList<>();
         
         for(Enemy e : enemies) {
             if(new PVector(position.x, position.y).mult(tileSize).dist(e.pos) <= (range + 0.5) * tileSize) {
+                inRange.add(e);
+            }
+        }
+
+        return inRange;
+    }
+
+    ArrayList<Enemy> findEnemiesInRange(PVector position, float range) {
+        ArrayList<Enemy> inRange = new ArrayList<>();
+        
+        for(Enemy e : enemies) {
+            if(position.dist(e.pos) <= (range + 0.5) + tileSize) {
                 inRange.add(e);
             }
         }

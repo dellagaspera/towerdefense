@@ -1,4 +1,4 @@
-enum Stat {DAMAGE, SHOOTING_SPEED, RANGE}
+enum Stat { DAMAGE, SHOOTING_SPEED, RANGE, AOE_DAMAGE }
 
 class Upgrade {
     int cost;
@@ -20,6 +20,7 @@ class Upgrade {
             case DAMAGE: description = "erro"; break;
             case SHOOTING_SPEED: description = "+" + (effect * 100) + "% velocidade"; break;
             case RANGE: description = "erro"; break;
+            case AOE_DAMAGE: description = "erro"; break;
         }
     }
 
@@ -33,6 +34,7 @@ class Upgrade {
             case DAMAGE: description = "+" + effect + " dano"; break;
             case SHOOTING_SPEED: description = "erro"; break;
             case RANGE: description = "+" + effect + " alcance"; break;
+            case AOE_DAMAGE: description = "erro"; break;
         }
     }
 
@@ -47,6 +49,7 @@ class Upgrade {
             case DAMAGE: description = "erro"; break;
             case SHOOTING_SPEED: description = "+" + (effect * 100) + "% velocidade"; break;
             case RANGE: description = "erro"; break;
+            case AOE_DAMAGE: description = "erro"; break;
         }
     }
 
@@ -61,6 +64,38 @@ class Upgrade {
             case DAMAGE: description = "+" + effect + " dano"; break;
             case SHOOTING_SPEED: description = "erro"; break;
             case RANGE: description = "+" + effect + " alcance"; break;
+            case AOE_DAMAGE: description = "erro"; break;
+        }
+    }
+    
+    public Upgrade(int cost, String name, Stat stat, int effectI, float effectF) {
+        this.cost = cost;
+        this.name = name;
+        this.stat = stat;
+        this.effectI = effectI;
+        this.effectF = effectF;
+
+        switch(stat) {
+            case DAMAGE: description = "erro"; break;
+            case SHOOTING_SPEED: description = "erro"; break;
+            case RANGE: description = "erro"; break;
+            case AOE_DAMAGE: description = "+" + effectI + " dano em área"; break;
+        }
+    }
+    
+    public Upgrade(int cost, String name, Stat stat, int effectI, float effectF, Upgrade unlocks) {
+        this.cost = cost;
+        this.name = name;
+        this.stat = stat;
+        this.effectI = effectI;
+        this.effectF = effectF;
+        this.unlocks = unlocks;
+
+        switch(stat) {
+            case DAMAGE: description = "erro"; break;
+            case SHOOTING_SPEED: description = "erro"; break;
+            case RANGE: description = "erro"; break;
+            case AOE_DAMAGE: description = "+" + effectI + " dano em área"; break;
         }
     }
 }
