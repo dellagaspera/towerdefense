@@ -1,7 +1,7 @@
 enum Targeting {STRONGEST, WEAKEST, CLOSEST, FURTHEST};
 
-final int maxUpgradePaths = 20;
-final int maxUpgradeCount = 40;
+final int maxUpgradePaths = 2;
+final int maxUpgradeCount = 6;
 
 class Tower extends Structure {
     float reloadDuration = 2;

@@ -196,7 +196,7 @@ class Enemy {
 
     void hurt(int dmg) {
         particlePresets.get("Explosion").spawn(renderPosition);
-        money += (dmg + min(0, health - dmg)) * moneyPerPop;
+        money += min(health, dmg) * moneyPerPop;
     
         health -= dmg;
 

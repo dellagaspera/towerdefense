@@ -11,11 +11,11 @@ class Cannon extends Tower {
         upgrades[0] = 
             new Upgrade(300, "Tiro Reforçado", Stat.DAMAGE, 1,
             new Upgrade(600, "Chumbo", Stat.DAMAGE, 1,
-            new Upgrade(1250, "Bomba", Stat.AOE_DAMAGE, 1, 0.5)));
+            new Upgrade(1500, "Bomba", Stat.AOE_DAMAGE, 1, 0.5)));
         upgrades[1] = 
-            new Upgrade(400, "Aceleração", Stat.SHOOTING_SPEED, 0.2,
-            new Upgrade(800, "Turbo", Stat.SHOOTING_SPEED, 0.3,
-            new Upgrade(1500, "Metralhadora", Stat.SHOOTING_SPEED, 0.5)));
+            new Upgrade(400, "Aceleração", Stat.SHOOTING_SPEED, 1/8.0,
+            new Upgrade(800, "Turbo", Stat.SHOOTING_SPEED, 1/8.0,
+            new Upgrade(1500, "Metralhadora", Stat.SHOOTING_SPEED, 1/6.0)));
         upgrades[2] = 
             new Upgrade(500, "Luneta", Stat.RANGE, 1,
             new Upgrade(750, "Mira Laser", Stat.RANGE, 1,

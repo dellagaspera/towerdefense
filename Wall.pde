@@ -1,6 +1,6 @@
 class Wall extends Structure {
     static final int weight = 1;
-    final float maxHealth = 10;
+    final float maxHealth = 20;
     float health = maxHealth;
     // Text healthText;
 

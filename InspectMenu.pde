@@ -210,11 +210,11 @@ class InspectMenu extends Image {
 
                 void update() {
                     if(t.upgrades[i_] == null) tintColor = color(34, 32, 52);
-                    else if(money < t.upgrades[i_].cost) {
-                        tintColor = color(255, 120, 120);
-                        isClickable = false;
-                    } else if(t.isValidUpgrade(i_) == false) {
+                    else if(t.isValidUpgrade(i_) == false) {
                         tintColor = color(34, 32, 52);
+                        isClickable = false;
+                    } else if(money < t.upgrades[i_].cost) {
+                        tintColor = color(255, 120, 120);
                         isClickable = false;
                     } else {
                         tintColor = color(120, 255, 120);

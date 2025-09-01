@@ -8,7 +8,7 @@ final int gridY = 17;
 
 final String theme = "grassy";
 
-int nPath = 5;
+int nPath = 1;
 int nSpawner = 1;
 
 int maxPathSize = 2*(gridX+gridY);
@@ -28,6 +28,9 @@ WaveManager wm = new WaveManager();
 int nextEnemy = 1;
 
 final int buildMenuWidth = 256;
+
+ArrayList<PVectorInt> bestPath;
+boolean drawPath = true;
 
 void settings() {
     size(buildMenuWidth + tileSize * gridX, tileSize * gridY, P2D);
@@ -125,6 +128,7 @@ void draw() {
 
     drawBackground();
     drawCore();
+    if(drawPath)drawBestPath();
 
     drawBuildOverlay();
     if(inspectMenu != null) drawRange(inspectMenu.selected);
@@ -134,6 +138,29 @@ void draw() {
     fill(255);
     textSize(16);
     // text("FPS: " + int(1 / Time.deltaTime), 50, 50);
+}
+
+void findBestPath() {
+    bestPath = new ArrayList<>();
+    PVectorInt gridPos = spawners[0];
+    PVectorInt nextPos = null;
+    do {
+        bestPath.add(gridPos);
+        if(Map.getNextPositionFrom(gridPos) != null) nextPos = new PVectorInt(Map.getNextPositionFrom(gridPos));
+        else break;
+        
+        gridPos = nextPos;
+    } while(nextPos != null);
+}
+
+void drawBestPath() {
+    findBestPath();
+
+    for(PVectorInt v : bestPath) {
+        noStroke();
+        fill(255, 255, 255, 128);
+        circle((v.x + 0.5) * tileSize, (v.y + 0.5) * tileSize, 5);
+    }
 }
 
 void drawBuildOverlay() {
