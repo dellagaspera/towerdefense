@@ -13,7 +13,7 @@ class Particle {
     float duration = 1;
 
     void _update() {
-        lifeTime += Time.deltaTime;
+        lifeTime += Time.scaledDeltaTime;
 
         if(sprites.length <= 0 || lifeTime >= duration) {
             die();

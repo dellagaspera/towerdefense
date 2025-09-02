@@ -3,12 +3,17 @@ TimeClass Time = new TimeClass();
 class TimeClass {
     public float deltaTime = 0;
     public float averageDeltaTime = 0;
+
+    public float scaledDeltaTime = 0;
+    public float timeScale = 1;
+    
     private int lastMillis;
     private float[] pastDeltaTimes = new float[50];
     
     void update() {
         int millis = millis();
         deltaTime = (millis - lastMillis) / 1000.0;
+        scaledDeltaTime = deltaTime * timeScale;
         lastMillis = millis;
         pastDeltaTimes[frameCount % 50] = deltaTime;
         

@@ -8,7 +8,7 @@ final int gridY = 17;
 
 final String theme = "grassy";
 
-int nPath = 1;
+int nPath = 3;
 int nSpawner = 1;
 
 int maxPathSize = 2*(gridX+gridY);
@@ -17,8 +17,15 @@ int pathMask[][] = new int[gridX][gridY];
 
 enum StructureType { Cannon, Wall, Sand };
 
-int hp = 100;
+enum GameState { Win, Running, Lose };
+
+int hp = 1;
 int money = 1000;
+
+int waveReward = 125;
+
+int waveCount;
+int wavesPlayed = 0;
 
 boolean buildMode = true;
 StructureType selectedBuild = null;
@@ -32,6 +39,8 @@ final int buildMenuWidth = 256;
 ArrayList<PVectorInt> bestPath;
 boolean drawPath = true;
 
+GameState gameState = GameState.Running;
+
 void settings() {
     size(buildMenuWidth + tileSize * gridX, tileSize * gridY, P2D);
 
@@ -41,10 +50,15 @@ void settings() {
 void setup() {
     poppins16 = createFont("assets/fonts/poppins.ttf", 16, true);
     poppins12 = createFont("assets/fonts/poppins.ttf", 12, true);
+    poppins32 = createFont("assets/fonts/poppins.ttf", 32, true);
+    poppins64 = createFont("assets/fonts/poppins.ttf", 64, true);
     
     sprites.loadSprites();
     sounds.loadSounds();
+    
     wm.readWaves();
+    waveCount = wm.waves.size();
+
     Map.generatePath();
 
     generateParticlePresets();
@@ -54,6 +68,20 @@ void setup() {
     setupBackground();
 
     setupUI();
+    
+    findBestPath();
+}
+
+void defeat() {
+    Time.timeScale = 0;
+
+    gameState = GameState.Lose;
+}
+
+void win() {
+    Time.timeScale = 0;
+
+    gameState = GameState.Win;
 }
 
 void setupBackground() {
@@ -126,6 +154,11 @@ void draw() {
     Time.update();
     mouseOnPath = Map.getNodeFrom(worldToGridPosition(new PVector(mouseX, mouseY))) != null;
 
+    if(gameState == GameState.Running) {
+        if(hp <= 0) defeat();
+        if(!wm.onWave && wm.waves.size() == 0) win();
+    }
+
     drawBackground();
     drawCore();
     if(drawPath)drawBestPath();
@@ -137,12 +170,57 @@ void draw() {
 
     fill(255);
     textSize(16);
-    // text("FPS: " + int(1 / Time.deltaTime), 50, 50);
+    // text("FPS: " + int(1 / Time.scaledDeltaTime), 50, 50);
+
+    if(gameState == GameState.Lose) drawDefeatScreen();
+    if(gameState == GameState.Win) drawWinScreen();
+}
+
+void drawDefeatScreen() {
+    fill(120, 60, 60, 128);
+    rect(0, 0, width, height);
+    
+    UIObject panel = new UIObject(new PVector(0, 0), new PVector(width, height));
+
+    new Text(panel, new PVector(width / 2, height / 2), "perdeu!") {
+        void init() {
+            horizontalAlign = CENTER;
+            verticalAlign = CENTER;
+
+            fontSize = 64;
+
+            textColor = color(194, 45, 67);
+
+            anchor.set(0.5, 0.5);
+            center.set(0.5, 0.5);
+        }
+    };
+}
+
+void drawWinScreen() {
+    fill(120, 210, 255, 128);
+    rect(0, 0, width, height);
+    
+    UIObject panel = new UIObject(new PVector(0, 0), new PVector(width, height));
+
+    new Text(panel, new PVector(width / 2, height / 2), "ganhou!") {
+        void init() {
+            horizontalAlign = CENTER;
+            verticalAlign = CENTER;
+
+            fontSize = 64;
+
+            textColor = color(245, 173, 66);
+
+            anchor.set(0.5, 0.5);
+            center.set(0.5, 0.5);
+        }
+    };
 }
 
 void findBestPath() {
     bestPath = new ArrayList<>();
-    PVectorInt gridPos = spawners[0];
+    PVectorInt gridPos = spawners[0];   
     PVectorInt nextPos = null;
     do {
         bestPath.add(gridPos);
@@ -154,8 +232,6 @@ void findBestPath() {
 }
 
 void drawBestPath() {
-    findBestPath();
-
     for(PVectorInt v : bestPath) {
         noStroke();
         fill(255, 255, 255, 128);
@@ -255,6 +331,9 @@ boolean build() {
     }
 
     selectedBuild = null;
+
+    findBestPath();
+
     return true;
 }
 
@@ -519,6 +598,24 @@ void generateBottomBar() {
             textColor = color(255);
         }
     };
+
+    new Text(panel, new PVector(128, 35), "0/0") {
+        void init() {
+            horizontalAlign = RIGHT;
+            verticalAlign = CENTER;
+
+            anchor.set(1, 1);
+            center.set(1, 1);
+
+            position.set(-136, -4);
+
+            textColor = color(255);
+        }
+
+        void update() {
+            text = wavesPlayed + "/" + waveCount;
+        }
+    };
 }
 
 void updateAll() {
@@ -527,9 +624,14 @@ void updateAll() {
     }
     deadEnemies = new ArrayList<>();
 
+    boolean ponWave = wm.onWave;
     if(wm.currentWave == null) wm.onWave = false;
     if(enemies.size() == 0 && wm.currentWave != null && !wm.currentWave.spawning) wm.onWave = false;
-    
+    if(ponWave && !wm.onWave) {
+        money += waveReward;
+        wavesPlayed++;
+    }
+
     for(Particle p : deadParticles) {
         particles.remove(p);
     }

@@ -52,7 +52,7 @@ class Enemy {
     private float attackCooldown = 0.5; // Cooldown antes que o inimigo possa atacar novamente
     private float attackTimer = attackCooldown; // contador desde o último ataque
 
-    float moveSpeed = 1.5;
+    float moveSpeed = 1.0;
 
     int walkDirection = 7;
 
@@ -61,17 +61,17 @@ class Enemy {
     private float bobbingTime = 0;
 
     void _update() {
-        attackTimer += Time.deltaTime;
+        attackTimer += Time.scaledDeltaTime;
         update();
 
         
-        bobbingTime = (Time.deltaTime * 6 + bobbingTime) % TWO_PI;
+        bobbingTime = (Time.scaledDeltaTime * 6 + bobbingTime) % TWO_PI;
         float bobbing = -sin(bobbingTime) * tileSize / 8;
         float floatingHeight = -tileSize / 2;
         float scaleOffset = (1 - scale) * tileSize / 2;
 
         renderPosition.set(pos.x + scaleOffset, pos.y + scaleOffset + bobbing + floatingHeight);
-
+    
         render();
     }
 
@@ -100,7 +100,7 @@ class Enemy {
         if (!canMove) {
             // se n pode andar, mas ta longe o suficiente, anda um pouco
             if (pos.dist(nextNodePos.copy().mult(tileSize)) > tileSize-10) {
-                pos.add(PVector.sub(nextNodePos.copy().mult(tileSize), pos).normalize().mult(tileSize * moveSpeed * Time.deltaTime));
+                pos.add(PVector.sub(nextNodePos.copy().mult(tileSize), pos).normalize().mult(tileSize * moveSpeed * Time.scaledDeltaTime));
             }
         } else {
             // pode andar
@@ -108,7 +108,7 @@ class Enemy {
                 gridPos = new PVectorInt(nextNodePos);
                 pos.set(gridPos.x * tileSize, gridPos.y * tileSize); // muda a posição para a posiçao exata da celula, evitando movimento estranho na diagonal 
             }
-            pos.add(PVector.sub(nextNodePos.copy().mult(tileSize), pos).normalize().mult(tileSize * moveSpeed * Time.deltaTime));
+            pos.add(PVector.sub(nextNodePos.copy().mult(tileSize), pos).normalize().mult(tileSize * moveSpeed * Time.scaledDeltaTime));
         }
 
         // if(nextNodePos.x > gridPos.x) sprite = sprites.png.get("monkey_r");
@@ -138,21 +138,6 @@ class Enemy {
         MapClass.Node nextNode = Map.getNodeFrom(nextNodeGridPos);
         if (target != null) {
             if(target.canBeAttacked != false) { 
-                float custoParaProximoNo = (nextNode != null) ? nextNode.custoDoInicio + nextNode.custoParaFim : 0;
-                
-                // Custo de desviar: Heurística da distância do inimigo ao fim do caminho mais o custo de uma caixa
-                float custoDesvioEstimado = Map.calcularHeuristica(Map.getNodeFrom(gridPos), Map.getNodeFrom(Map.endPos)) + 11;
-                
-                // Custo de quebrar a caixa: A heurística para o próximo nó mais o custo da caixa
-                float custoQuebraEstimado = Map.calcularHeuristica(Map.getNodeFrom(gridPos), nextNode) + target.weight;
-                
-                // Compara os custos. Se desviar é mais barato, limpe o caminho pré-calculado
-                // para forçar o inimigo a recalcular a rota.
-                if (custoDesvioEstimado < custoQuebraEstimado) {
-                    Map.clearPath(); // Limpa o caminho para forçar o recálculo
-                }
-                
-                // Tenta atacar se não for mais barato desviar
                 boolean canAttack = attack(nextNodeGridPos);
                 if (!canAttack) {
                     return;
@@ -169,7 +154,7 @@ class Enemy {
             gridPos = nextNodeGridPos;
             pos.set(gridPos.x * tileSize, gridPos.y * tileSize);
         } else {
-            pos.add(PVector.sub(nextNodePos.copy().mult(tileSize), pos).normalize().mult(tileSize * moveSpeed / nextNode.custo * Time.deltaTime)); // anda mais lento o custo do proximo node for maior que 1
+            pos.add(PVector.sub(nextNodePos.copy().mult(tileSize), pos).normalize().mult(tileSize * moveSpeed / nextNode.custo * Time.scaledDeltaTime)); // anda mais lento o custo do proximo node for maior que 1
         }
         sprite = sprites.png.get("monkey" + walkDirection);
         // log("moveDirection=" + (int)moveDirection);
@@ -195,6 +180,10 @@ class Enemy {
     }
 
     void hurt(int dmg) {
+        if(health <= 0) {
+            logError("Tried to damage dead enemy!");
+            return;
+        }
         particlePresets.get("Explosion").spawn(renderPosition);
         money += min(health, dmg) * moneyPerPop;
     
@@ -249,7 +238,9 @@ class Enemy {
 
         sprite = sprites.png.get("monkey_d");
 
-        enemies.add(this);
+        synchronized(enemies) {
+            enemies.add(this);
+        }
     }
 
     Enemy(PVectorInt gridPos, int health) {
@@ -261,6 +252,8 @@ class Enemy {
 
         sprite = sprites.png.get("monkey_d");
 
-        enemies.add(this);
+        synchronized(enemies) {
+            enemies.add(this);
+        }
     }
 }

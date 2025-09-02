@@ -85,6 +85,7 @@ class Tower extends Structure {
             ArrayList<Enemy> inRange = findEnemiesInRange(target.pos, aoeRange);
 
             for(Enemy e : inRange) {
+                if(e.health <= 0) continue;
                 e.hurt(aoeDamage);
             }
         }
@@ -96,7 +97,7 @@ class Tower extends Structure {
         if(canShoot && target != null) {
             shoot();
         } else {
-            reloadProgress += Time.deltaTime;
+            reloadProgress += Time.scaledDeltaTime;
             if(reloadProgress >= reloadDuration) canShoot = true;
         }
     }
@@ -118,7 +119,7 @@ class Tower extends Structure {
         ArrayList<Enemy> inRange = new ArrayList<>();
         
         for(Enemy e : enemies) {
-            if(new PVector(position.x, position.y).mult(tileSize).dist(e.pos) <= (range + 0.5) * tileSize) {
+            if(new PVector(position.x, position.y).mult(tileSize).dist(e.pos) <= (range + 0.5) * tileSize && e.health > 0) {
                 inRange.add(e);
             }
         }

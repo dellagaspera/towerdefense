@@ -7,7 +7,7 @@ class WaveManager {
     public boolean onWave = false;
 
     void readWaves() {
-        String[] lines = loadStrings("waves_data.txt");
+        String[] lines = loadStrings("waves.txt");
         for(String line : lines) {
             line = trim(line);
 
@@ -80,7 +80,9 @@ class EnemyGroup {
     public void spawnGroup() {
         try {
             for(int i = 0; i < count; i++) {
-                new Enemy(spawners[(int)random(0, nSpawner)], health);
+                synchronized(enemies) {
+                    new Enemy(spawners[(int)random(0, nSpawner)], health);
+                }
                 Thread.sleep(int(delay * 1000));
             }
             Thread.sleep(int(delay * 1000));

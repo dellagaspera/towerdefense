@@ -415,7 +415,18 @@ private class MapClass {
 
     public void calculateBestPath(Node start, Node end) {
         // Reinicia tudo
-        nextNodeGrid = new Node[gridX][(gridY-1)];
+        for (int x = 0; x < gridX; x++) {
+            for (int y = 0; y < gridY - 1; y++) {
+                Node node = path[x][y];
+                if (node != null) {
+                    node.parent = null;
+                    node.f = 0;
+                    node.custoDoInicio = 0;
+                    node.custoParaFim = 0;
+                }
+            }
+        }
+
 
         PriorityQueue<Node> openList = new PriorityQueue<Node>(
             (a, b) -> Float.compare(a.f, b.f)

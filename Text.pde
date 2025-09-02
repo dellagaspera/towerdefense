@@ -1,5 +1,7 @@
 PFont poppins12;
 PFont poppins16;
+PFont poppins32;
+PFont poppins64;
 
 class Text extends UIObject {
     String text;
@@ -50,7 +52,9 @@ class Text extends UIObject {
         noFill();
         noStroke();
         if(fontSize < 16) font = poppins12;
-        else font = poppins16;
+        else if(fontSize < 32) font = poppins16;
+        else if(fontSize < 64) font = poppins32;
+        else font = poppins64;
         textFont(font);
         textSize(fontSize);
         textAlign(horizontalAlign, verticalAlign);
