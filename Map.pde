@@ -49,7 +49,9 @@ private class MapClass {
         if (node != null) {
             node.custo = weight;
             // atualiza o caminho
+            nextNodeGrid = new Node[gridX][(gridY-1)];
             calculateBestPath(getNodeFrom(spawners[0]), getNodeFrom(endPos));
+            findBestPath();
         } else {
             logError("Node on position " + pos.toString() + " is null!");
             //println("null!");
@@ -69,7 +71,7 @@ private class MapClass {
     }
 
     public PVector getNextPositionFrom(PVector pos) {
-        if (!isValidPos(pos))
+        if (!isValidPos(pos)) //<>//
             return null; // posição inválida
 
 
@@ -82,7 +84,8 @@ private class MapClass {
         // se o próximo nó já foi calculado, retorna a posição dele
         Node nextNode = nextNodeGrid[(int) pos.x][(int) pos.y];
         if (nextNode != null) return nextNode.pos;
-
+        
+        println(pos);
 
         // se não, calcula o próximo nó usando A*
         calculateBestPath(getNodeFrom(pos), getNodeFrom(endPos));
@@ -414,6 +417,7 @@ private class MapClass {
     }
 
     public void calculateBestPath(Node start, Node end) {
+      println("recalculei vrr");
         // Reinicia tudo
         for (int x = 0; x < gridX; x++) {
             for (int y = 0; y < gridY - 1; y++) {

@@ -8,8 +8,8 @@ final int gridY = 17;
 
 final String theme = "grassy";
 
-int nPath = 3;
-int nSpawner = 1;
+int nPath = 7;
+int nSpawner = 2;
 
 int maxPathSize = 2*(gridX+gridY);
 
@@ -36,7 +36,7 @@ int nextEnemy = 1;
 
 final int buildMenuWidth = 256;
 
-ArrayList<PVectorInt> bestPath;
+ArrayList<PVectorInt> bestPath = new ArrayList<>();
 boolean drawPath = true;
 
 GameState gameState = GameState.Running;
@@ -219,16 +219,19 @@ void drawWinScreen() {
 }
 
 void findBestPath() {
-    bestPath = new ArrayList<>();
-    PVectorInt gridPos = spawners[0];   
+    bestPath.clear();
+    
+    for (int i = 0; i < nSpawner; i++) {
+      PVectorInt gridPos = spawners[i];   
     PVectorInt nextPos = null;
-    do {
-        bestPath.add(gridPos);
-        if(Map.getNextPositionFrom(gridPos) != null) nextPos = new PVectorInt(Map.getNextPositionFrom(gridPos));
-        else break;
-        
-        gridPos = nextPos;
-    } while(nextPos != null);
+      do {
+          bestPath.add(gridPos);
+          if(Map.getNextPositionFrom(gridPos) != null) nextPos = new PVectorInt(Map.getNextPositionFrom(gridPos));
+          else break;
+          
+          gridPos = nextPos;
+      } while(nextPos != null);
+    }
 }
 
 void drawBestPath() {
