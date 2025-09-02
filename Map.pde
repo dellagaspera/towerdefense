@@ -84,8 +84,6 @@ private class MapClass {
         // se o próximo nó já foi calculado, retorna a posição dele
         Node nextNode = nextNodeGrid[(int) pos.x][(int) pos.y];
         if (nextNode != null) return nextNode.pos;
-        
-        println(pos);
 
         // se não, calcula o próximo nó usando A*
         calculateBestPath(getNodeFrom(pos), getNodeFrom(endPos));
@@ -417,7 +415,6 @@ private class MapClass {
     }
 
     public void calculateBestPath(Node start, Node end) {
-      println("recalculei vrr");
         // Reinicia tudo
         for (int x = 0; x < gridX; x++) {
             for (int y = 0; y < gridY - 1; y++) {

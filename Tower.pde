@@ -149,7 +149,7 @@ class Tower extends Structure {
         if(targeting == Targeting.CLOSEST) {
             float temp = position.dist(inRange.get(0).pos);
             for(Enemy e : inRange) {
-                float dist = new PVector(position.x, position.y).mult(tileSize).dist(e.pos);
+                float dist = position.dist(e.pos);
                 if(dist < temp) {
                     temp = dist;
                     target = e;
@@ -159,7 +159,7 @@ class Tower extends Structure {
         if(targeting == Targeting.FURTHEST) {
             float temp = position.dist(inRange.get(0).pos);
             for(Enemy e : inRange) {
-                float dist = new PVector(position.x, position.y).mult(tileSize).dist(e.pos);
+                float dist = position.dist(e.pos);
                 if(dist > temp) {
                     temp = dist;
                     target = e;

@@ -8,8 +8,8 @@ final int gridY = 17;
 
 final String theme = "grassy";
 
-int nPath = 7;
-int nSpawner = 2;
+int nPath = 2;
+int nSpawner = 1;
 
 int maxPathSize = 2*(gridX+gridY);
 
@@ -22,7 +22,7 @@ enum GameState { Win, Running, Lose };
 int hp = 1;
 int money = 1000;
 
-int waveReward = 125;
+int waveReward = 250;
 
 int waveCount;
 int wavesPlayed = 0;
@@ -225,7 +225,7 @@ void findBestPath() {
       PVectorInt gridPos = spawners[i];   
     PVectorInt nextPos = null;
       do {
-          bestPath.add(gridPos);
+          if (!bestPath.contains(gridPos)) bestPath.add(gridPos);
           if(Map.getNextPositionFrom(gridPos) != null) nextPos = new PVectorInt(Map.getNextPositionFrom(gridPos));
           else break;
           
