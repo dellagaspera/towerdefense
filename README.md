@@ -1,8 +1,9 @@
-# towerdefense
+# Tower Defense
+Turma 203 - Grupo 1
+
 Trabalho 2 AEDS
 
-# integrantes
-### turma 203
+### Integrantes:
 - André Dias
 - Bernardo Drummond
 - Francisco Almeida
